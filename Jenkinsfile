@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'amd64&&freebsd&&kotlin'
+        label 'amd64&&docker&&kotlin'
     }
 
     options {
@@ -23,7 +23,7 @@ pipeline {
         stage("Build and Test") {
             steps {
                 configFileProvider([configFile(fileId: '4f3d0128-0fdd-4de7-8536-5cbdd54a8baf', variable: 'MAVEN_SETTINGS_XML')]) {
-                    sh 'mvn -B -s "$MAVEN_SETTINGS_XML" install'
+                    sh 'mvn -B -s "$MAVEN_SETTINGS_XML" clean install'
                 }
             }
 
@@ -97,30 +97,15 @@ pipeline {
 
                     steps {
                         configFileProvider([configFile(fileId: '4f3d0128-0fdd-4de7-8536-5cbdd54a8baf', variable: 'MAVEN_SETTINGS_XML')]) {
-                            sh "mvn -B -s \"$MAVEN_SETTINGS_XML\" clean package -DskipTests -Dquarkus.package.type=fast-jar"
+                            sh "mvn -B -s \"$MAVEN_SETTINGS_XML\" clean install -DskipTests"
                         }
-                        sh "docker build -t rafaelostertag/astro-server:latest-arm64 -f src/main/docker/Dockerfile.jvm ."
-                        withCredentials([usernamePassword(credentialsId: '750504ce-6f4f-4252-9b2b-5814bd561430', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
-                            sh 'docker login --username "$USERNAME" --password "$PASSWORD"'
-                            sh "docker push rafaelostertag/astro-server:latest-arm64"
-                        }
+                        buildDockerImage("server", "latest-arm64")
                     }
                 }
 
                 stage("AMD64") {
-                    agent {
-                        label "amd64&&docker&&kotlin"
-                    }
-
                     steps {
-                        configFileProvider([configFile(fileId: '4f3d0128-0fdd-4de7-8536-5cbdd54a8baf', variable: 'MAVEN_SETTINGS_XML')]) {
-                            sh "mvn -B -s \"$MAVEN_SETTINGS_XML\" clean package -DskipTests -Dquarkus.package.type=fast-jar"
-                        }
-                        sh "docker build -t rafaelostertag/astro-server:latest-amd64 -f src/main/docker/Dockerfile.jvm ."
-                        withCredentials([usernamePassword(credentialsId: '750504ce-6f4f-4252-9b2b-5814bd561430', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
-                            sh 'docker login --username "$USERNAME" --password "$PASSWORD"'
-                            sh "docker push rafaelostertag/astro-server:latest-amd64"
-                        }
+                        buildDockerImage("server", "latest-amd64")
                     }
                 }
             }
@@ -134,16 +119,8 @@ pipeline {
                 }
             }
 
-            agent {
-                label "docker"
-            }
-
             steps {
-                withCredentials([usernamePassword(credentialsId: '750504ce-6f4f-4252-9b2b-5814bd561430', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
-                    sh 'docker login --username "$USERNAME" --password "$PASSWORD"'
-                    sh 'docker manifest create "rafaelostertag/astro-server:latest" --amend "rafaelostertag/astro-server:latest-amd64" --amend "rafaelostertag/astro-server:latest-arm64"'
-                    sh "docker manifest push --purge rafaelostertag/astro-server:latest"
-                }
+                buildMultiArchManifest("latest")
             }
         }
 
@@ -167,34 +144,19 @@ pipeline {
 
                     steps {
                         configFileProvider([configFile(fileId: '4f3d0128-0fdd-4de7-8536-5cbdd54a8baf', variable: 'MAVEN_SETTINGS_XML')]) {
-                            sh "mvn -B -s \"$MAVEN_SETTINGS_XML\" clean package -DskipTests -Dquarkus.package.type=fast-jar"
+                            sh "mvn -B -s \"$MAVEN_SETTINGS_XML\" clean install -DskipTests"
                         }
-                        sh 'docker build -t rafaelostertag/astro-server:${VERSION}-arm64 -f src/main/docker/Dockerfile.jvm .'
-                        withCredentials([usernamePassword(credentialsId: '750504ce-6f4f-4252-9b2b-5814bd561430', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
-                            sh 'docker login --username "$USERNAME" --password "$PASSWORD"'
-                            sh 'docker push rafaelostertag/astro-server:${VERSION}-arm64'
-                        }
+                        buildDockerImage("server", env.VERSION + "-arm64")
                     }
                 }
 
                 stage("AMD64") {
-                    agent {
-                        label "amd64&&docker&&kotlin"
-                    }
-
                     environment {
                         VERSION = sh returnStdout: true, script: "mvn -B help:evaluate '-Dexpression=project.version' | grep -v '\\[' | tr -d '\\n'"
                     }
 
                     steps {
-                        configFileProvider([configFile(fileId: '4f3d0128-0fdd-4de7-8536-5cbdd54a8baf', variable: 'MAVEN_SETTINGS_XML')]) {
-                            sh "mvn -B -s \"$MAVEN_SETTINGS_XML\" clean package -DskipTests -Dquarkus.package.type=fast-jar"
-                        }
-                        sh 'docker build -t rafaelostertag/astro-server:${VERSION}-amd64 -f src/main/docker/Dockerfile.jvm .'
-                        withCredentials([usernamePassword(credentialsId: '750504ce-6f4f-4252-9b2b-5814bd561430', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
-                            sh 'docker login --username "$USERNAME" --password "$PASSWORD"'
-                            sh 'docker push rafaelostertag/astro-server:${VERSION}-amd64'
-                        }
+                        buildDockerImage("server", env.VERSION + "-amd64")
                     }
                 }
             }
@@ -208,20 +170,12 @@ pipeline {
                 }
             }
 
-            agent {
-                label "docker&&kotlin"
-            }
-
             environment {
                 VERSION = sh returnStdout: true, script: "mvn -B help:evaluate '-Dexpression=project.version' | grep -v '\\[' | tr -d '\\n'"
             }
 
             steps {
-                withCredentials([usernamePassword(credentialsId: '750504ce-6f4f-4252-9b2b-5814bd561430', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
-                    sh 'docker login --username "$USERNAME" --password "$PASSWORD"'
-                    sh 'docker manifest create "rafaelostertag/astro-server:${VERSION}" --amend "rafaelostertag/astro-server:${VERSION}-amd64" --amend "rafaelostertag/astro-server:${VERSION}-arm64"'
-                    sh 'docker manifest push --purge rafaelostertag/astro-server:${VERSION}'
-                }
+                buildMultiArchManifest(env.VERSION)
             }
         }
 
@@ -248,6 +202,40 @@ pipeline {
             mail to: "rafi@guengel.ch",
                     subject: "${JOB_NAME} (${BRANCH_NAME};${env.BUILD_DISPLAY_NAME}) -- ${currentBuild.currentResult}",
                     body: "Refer to ${currentBuild.absoluteUrl}"
+        }
+    }
+}
+
+def buildDockerImage(String fromDirectory, String tag) {
+    withEnv(['IMAGE_TAG=' + tag]) {
+        withCredentials([usernamePassword(credentialsId: '750504ce-6f4f-4252-9b2b-5814bd561430', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
+            sh 'docker login --username "$USERNAME" --password "$PASSWORD"'
+            configFileProvider([configFile(fileId: '4f3d0128-0fdd-4de7-8536-5cbdd54a8baf', variable: 'MAVEN_SETTINGS_XML')]) {
+                dir(fromDirectory) {
+                    sh '''mvn -B \
+                        -s "${MAVEN_SETTINGS_XML}" \\
+                        clean \\
+                        package \\
+                        -DskipTests \\
+                        -Dquarkus.container-image.build=true \\
+                        -Dquarkus.container-image.tag="${IMAGE_TAG}" \\
+                        -Dquarkus.container-image.group=rafaelostertag \\
+                        -Dquarkus.container-image.push=true \\
+                        -Dquarkus.container-image.username="${USERNAME}" \\
+                        -Dquarkus.container-image.password="${PASSWORD}"
+                        '''
+                }
+            }
+        }
+    }
+}
+
+def buildMultiArchManifest(String tag) {
+    withEnv(['IMAGE_TAG=' + tag]) {
+        withCredentials([usernamePassword(credentialsId: '750504ce-6f4f-4252-9b2b-5814bd561430', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
+            sh 'docker login --username "$USERNAME" --password "$PASSWORD"'
+            sh 'docker manifest create "rafaelostertag/astro-server:${IMAGE_TAG}" --amend "rafaelostertag/astro-server:${IMAGE_TAG}-amd64" --amend "rafaelostertag/astro-server:${IMAGE_TAG}-arm64"'
+            sh 'docker manifest push --purge "rafaelostertag/astro-server:${IMAGE_TAG}"'
         }
     }
 }
