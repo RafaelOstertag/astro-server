@@ -1,0 +1,313 @@
+openapi: 3.0.3
+info:
+  title: Astro Server
+  version: '1.0'
+  contact:
+    name: Rafael Ostertag
+    email: rafi@guengel.ch
+  description: Astronomy REST Server
+servers:
+  - url: 'http://localhost:8080'
+    description: Local instance
+paths:
+  /v1/open-ngc:
+    get:
+      summary: OpenNGC Catalog
+      tags:
+        - OpenNGC
+      operationId: listObjects
+      description: Get OpenNGC catalog entries
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageIndex'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NGCEntry'
+          headers:
+            x-page-size:
+              schema:
+                type: integer
+              description: Current page size
+            x-page-index:
+              schema:
+                type: integer
+              description: Current page index
+            x-previous-page-index:
+              schema:
+                type: integer
+              description: 'Previous page index, if applicable'
+            x-next-page-index:
+              schema:
+                type: integer
+              description: 'Next page index, if applicable'
+            x-first-page:
+              schema:
+                type: boolean
+              description: Indicates whether or not this is the first page
+            x-last-page:
+              schema:
+                type: boolean
+              description: Indicate whether or not this is the last page
+            x-total-pages:
+              schema:
+                type: integer
+              description: Number of pages with this page size
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  '/v1/open-ngc/{objectName}':
+    parameters:
+      - schema:
+          type: string
+        name: objectName
+        in: path
+        required: true
+    get:
+      summary: Your GET endpoint
+      tags:
+        - OpenNGC
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NGCEntry'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: getObject
+      description: Get a specific object
+  /v1/open-ngc/fetch:
+    put:
+      summary: ''
+      operationId: fetchCatalog
+      responses:
+        '204':
+          description: No Content
+      tags:
+        - OpenNGC
+      description: Fetch catalog
+    parameters: [ ]
+  /v1/open-ngc/last-update:
+    get:
+      summary: Your GET endpoint
+      tags:
+        - OpenNGC
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogLastUpdate'
+      operationId: getLastCatalogUpdate
+      description: Returns date and time of last catalog update
+components:
+  schemas:
+    NGCEntry:
+      title: CatalogEntry
+      type: object
+      description: Catalog Entry
+      properties:
+        catalogName:
+          type: string
+          description: Catalog object is listed in
+        name:
+          type: string
+          description: Object name
+        type:
+          $ref: '#/components/schemas/ObjectType'
+        equatorialCoordinates:
+          $ref: '#/components/schemas/EquatorialCoordinates'
+        constellation:
+          $ref: '#/components/schemas/Constellation'
+        majorAxis:
+          type: number
+          description: 'Major axis, expressed in arcmin'
+        minorAxis:
+          type: number
+          description: 'Minor axis, expressed in arcmin'
+        positionAngle:
+          type: number
+          description: Major axis position angle (North Eastwards)
+        bMag:
+          type: number
+          description: Apparent total magnitude in B filter
+        vMag:
+          type: number
+          description: Apparent total magnitude in V filter
+        jMag:
+          type: number
+          description: Apparent total magnitude in J filter
+        hMag:
+          type: number
+          description: Apparent total magnitude in H filter
+        kMag:
+          type: number
+          description: Apparent total magnitude in K filter
+        surfaceBrightness:
+          type: number
+          description: 'Mean surface brigthness within 25 mag isophot (B-band), expressed in mag/arcsec2. Galaxies only.'
+        hubble:
+          type: string
+          description: Morphological type. Galaxies only
+        parallax:
+          type: number
+          description: 'Parallax, expressed in milliarcseconds'
+        properMotionRA:
+          description: 'Proper motion in RA, expressed in milliarcseconds/year'
+          type: number
+        properMotionDec:
+          description: 'Proper motion in Dec, expressed in milliarcseconds/year'
+          type: number
+        radialVelocity:
+          type: number
+          description: 'Radial velocity (heliocentric), expressed in km/s'
+        redshift:
+          type: number
+          description: Redshift (heliocentric)
+        cstarUMag:
+          description: Apparent magnitude of central star in U filter. Planetary Nebulae only.
+          type: number
+        cstarBMag:
+          type: number
+          description: Apparent magnitude of central star in B filter. Planetary Nebulae only.
+        cstarVMag:
+          description: Apparent magnitude of central star in V filter. Planetary Nebulae only.
+          type: number
+        messier:
+          type: integer
+          description: Cross reference Messier number
+        ngc:
+          type: string
+          description: 'other NGC identification, if the object is listed twice in the catalog.'
+        ic:
+          type: string
+          description: 'Cross reference IC number, if the object is also listed with that identification.'
+        cstarNames:
+          type: array
+          description: Central star identifications. Planetary Nebulae only.
+          items:
+            type: string
+        identifiers:
+          type: array
+          description: Cross reference with other catalogs.
+          items:
+            type: string
+        commonNames:
+          type: array
+          description: Common names of the object if any.
+          items:
+            type: string
+        nedNotes:
+          type: string
+          description: Notes about object exported from NED.
+        openNGCNotes:
+          type: string
+          description: Notes about the object data from OpenNGC catalog.
+      required:
+        - catalogName
+        - name
+        - type
+    ObjectType:
+      title: ObjectType
+      type: object
+      description: Describes object type
+      properties:
+        abbrev:
+          type: string
+          description: Abbreviation
+        description:
+          type: string
+          description: Object type description
+    EquatorialCoordinates:
+      title: EquatorialCoordinates
+      type: object
+      description: Equatorial coordinates
+      properties:
+        ra:
+          type: string
+          description: Right ascension in J2000 epoch
+        dec:
+          type: string
+          description: Declination in degrees (J2000 epoch)
+        raDecimal:
+          type: number
+          description: Decimal right ascension
+        decDecimal:
+          type: number
+          description: Decimal declination in degrees
+      required:
+        - ra
+        - dec
+        - raDecimal
+        - decDecimal
+    Constellation:
+      title: Constellation
+      type: object
+      description: Constellation
+      properties:
+        abbrev:
+          type: string
+          description: Constellation abbreviation
+        fullname:
+          type: string
+          description: Constellation full name
+      required:
+        - abbrev
+        - fullname
+    Error:
+      title: Error
+      type: object
+      description: Error message
+      properties:
+        reason:
+          type: string
+          description: Reason of the error
+      required:
+        - reason
+    CatalogLastUpdate:
+      title: CatalogLastUpdate
+      type: object
+      description: Information when catalog was last updated
+      properties:
+        lastUpdated:
+          type: string
+          description: Date/time of last update
+          format: date-time
+  parameters:
+    pageSize:
+      name: page-size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+        format: int32
+        default: 25
+      description: Page size
+    pageIndex:
+      name: page-index
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        format: int32
+        default: 0
+      description: 'Page number to retrieve, zero based'
+  responses: { }
+tags:
+  - name: OpenNGC

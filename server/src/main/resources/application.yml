@@ -1,0 +1,7 @@
+astro-server:
+  catalog-file-path: /tmp/astro-server/NGC.csv
+
+  catalog-fetch:
+    catalog-url: https://raw.githubusercontent.com/mattiaverga/OpenNGC/master/NGC.csv
+    cron:
+      expression: "0 0 5 * * ?"

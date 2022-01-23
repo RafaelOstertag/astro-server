@@ -1,0 +1,3 @@
+"%test":
+  astro-server:
+    catalog-file-path: /tmp/test/ngc.csv
