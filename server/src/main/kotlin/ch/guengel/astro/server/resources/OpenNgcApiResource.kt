@@ -10,12 +10,23 @@ class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcAp
         return Response.noContent().build()
     }
 
+    override fun getConstellations(): Response = Response.ok(openNGCService.constellations).build()
+
     override fun getLastCatalogUpdate(): Response = Response.ok(openNGCService.getLastCatalogUpdate()).build()
 
     override fun getObject(objectName: String): Response = Response.ok(openNGCService.getObject(objectName)).build()
 
-    override fun listObjects(pageSize: Int, pageIndex: Int): Response {
-        val pagedEntryList = openNGCService.list(pageIndex, pageSize)
+    override fun getTypes(): Response = Response.ok(openNGCService.objectTypes).build()
+
+    override fun listObjects(
+        pageSize: Int,
+        pageIndex: Int,
+        messier: Boolean?,
+        catalog: String?,
+        objects: Set<String>?,
+        constellations: Set<String>?,
+    ): Response {
+        val pagedEntryList = openNGCService.list(pageIndex, pageSize, messier, catalog, objects, constellations)
         val response = Response.ok(pagedEntryList.entryList)
             .header("x-page-size", pagedEntryList.pageSize)
             .header("x-page-index", pagedEntryList.pageIndex)
@@ -33,5 +44,4 @@ class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcAp
 
         return response.build()
     }
-
 }

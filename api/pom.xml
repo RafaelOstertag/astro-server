@@ -84,22 +84,19 @@
                             <typeMappings>
                                 <typeMapping>number=double</typeMapping>
                             </typeMappings>
-
+                            <generateSupportingFiles>false</generateSupportingFiles>
                             <configOptions>
-                                <supportingFiles>false</supportingFiles>
                                 <useSwaggerAnnotations>false</useSwaggerAnnotations>
                                 <java8>true</java8>
                                 <dateLibrary>java8</dateLibrary>
                                 <fullJavaUtil>true</fullJavaUtil>
                                 <sourceFolder>src/main/java</sourceFolder>
-                                <generatePom>false</generatePom>
                                 <interfaceOnly>true</interfaceOnly>
                                 <useTags>true</useTags>
-                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
                                 <returnResponse>true</returnResponse>
                                 <apiPackage>ch.guengel.astro.server.api</apiPackage>
                                 <modelPackage>ch.guengel.astro.server.model</modelPackage>
-                                <generatePom>false</generatePom>
+                                <additionalEnumTypeAnnotations>true</additionalEnumTypeAnnotations>
                             </configOptions>
                         </configuration>
                     </execution>

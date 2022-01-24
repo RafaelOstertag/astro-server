@@ -9,59 +9,62 @@ import javax.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
 class CatalogEntryMapper {
-    fun map(entry: Entry): NGCEntry {
-        return ngcEntry {
-            catalogName = entry.catalogName.toString()
-            name = entry.name
-            type = objectType {
-                abbrev = entry.objectType.abbrev
-                description = entry.objectType.description
-            }
+    fun map(entry: Entry): NGCEntry = ngcEntry {
+        catalogName = entry.catalogName.toString()
+        name = entry.name
+        type = map(entry.objectType)
 
-            if (entry.equatorialCoordinates != null) {
-                equatorialCoordinates = equatorialCoordinates {
-                    ra = entry.equatorialCoordinates!!.rightAscension.toString()
-                    dec = entry.equatorialCoordinates!!.declination.toString()
-                    raDecimal = entry.equatorialCoordinates!!.rightAscension.asDecimal()
-                    decDecimal = entry.equatorialCoordinates!!.declination.asDecimal()
-                }
+        if (entry.equatorialCoordinates != null) {
+            equatorialCoordinates = equatorialCoordinates {
+                ra = entry.equatorialCoordinates!!.rightAscension.toString()
+                dec = entry.equatorialCoordinates!!.declination.toString()
+                raDecimal = entry.equatorialCoordinates!!.rightAscension.asDecimal()
+                decDecimal = entry.equatorialCoordinates!!.declination.asDecimal()
             }
-
-            if (entry.constellation != null) {
-                constellation = constellation {
-                    abbrev = entry.constellation!!.abbrev
-                    fullname = entry.constellation!!.fullname
-                }
-            }
-
-            majorAxis = entry.majorAxis
-            minorAxis = entry.minorAxis
-            positionAngle = entry.positionAngle
-            setbMag(entry.bMag)
-            setvMag(entry.vMag)
-            setjMag(entry.jMag)
-            sethMag(entry.hMag)
-            setkMag(entry.kMag)
-            surfaceBrightness = entry.surfBr
-            hubble = entry.hubble
-            parallax = entry.pax
-            properMotionRA = entry.pmRA
-            properMotionDec = entry.pmDec
-            radialVelocity = entry.radVel
-            redshift = entry.redshift
-            cstarUMag = entry.cstarUMag
-            cstarBMag = entry.cstarBMag
-            cstarVMag = entry.cstarVMag
-            messier = entry.messier
-            ngc = entry.ngc
-            ic = entry.ic
-            cstarNames = entry.cstarNames
-            identifiers = entry.identifiers
-            commonNames = entry.commonNames
-            nedNotes = entry.nedNotes
-            openNGCNotes = entry.openNGCNotes
         }
+
+        if (entry.constellation != null) {
+            constellation = map(entry.constellation!!)
+        }
+
+        majorAxis = entry.majorAxis
+        minorAxis = entry.minorAxis
+        positionAngle = entry.positionAngle
+        setbMag(entry.bMag)
+        setvMag(entry.vMag)
+        setjMag(entry.jMag)
+        sethMag(entry.hMag)
+        setkMag(entry.kMag)
+        surfaceBrightness = entry.surfBr
+        hubble = entry.hubble
+        parallax = entry.pax
+        properMotionRA = entry.pmRA
+        properMotionDec = entry.pmDec
+        radialVelocity = entry.radVel
+        redshift = entry.redshift
+        cstarUMag = entry.cstarUMag
+        cstarBMag = entry.cstarBMag
+        cstarVMag = entry.cstarVMag
+        messier = entry.messier
+        ngc = entry.ngc
+        ic = entry.ic
+        cstarNames = entry.cstarNames
+        identifiers = entry.identifiers
+        commonNames = entry.commonNames
+        nedNotes = entry.nedNotes
+        openNGCNotes = entry.openNGCNotes
     }
+
+    fun map(objectType: ch.guengel.astro.openngc.ObjectType): ObjectType = objectType {
+        abbrev = objectType.abbrev
+        description = objectType.description
+    }
+
+    fun map(constellation: ch.guengel.astro.openngc.Constellation): Constellation = constellation {
+        abbrev = constellation.abbrev
+        fullname = constellation.fullname
+    }
+
 
     private fun ngcEntry(init: NGCEntry.() -> Unit): NGCEntry {
         val ngcEntry = NGCEntry()

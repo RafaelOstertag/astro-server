@@ -1,6 +1,7 @@
 package ch.guengel.astro.server.resources
 
 import ch.guengel.astro.server.model.Error
+import ch.guengel.astro.server.ngc.NoObjectsFoundError
 import ch.guengel.astro.server.ngc.ObjectNotFoundError
 import ch.guengel.astro.server.ngc.PageOutOfBoundsError
 import org.jboss.resteasy.reactive.RestResponse
@@ -17,7 +18,11 @@ class ExceptionMappers {
         RestResponse.status(Response.Status.NOT_FOUND, e.toError())
 
     @ServerExceptionMapper
-    fun mapObjectNotFoundException(e: ObjectNotFoundError): RestResponse<Error> =
+    fun mapObjectNotFoundError(e: ObjectNotFoundError): RestResponse<Error> =
+        RestResponse.status(Response.Status.NOT_FOUND, e.toError())
+
+    @ServerExceptionMapper
+    fun mapNoObjectsFoundError(e: NoObjectsFoundError): RestResponse<Error> =
         RestResponse.status(Response.Status.NOT_FOUND, e.toError())
 
     @ServerExceptionMapper

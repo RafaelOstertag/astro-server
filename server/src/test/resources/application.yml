@@ -1,3 +1,6 @@
 "%test":
+  quarkus:
+    jacoco:
+      reuse-data-file: true
   astro-server:
     catalog-file-path: /tmp/test/ngc.csv

@@ -1,3 +1,8 @@
+quarkus:
+  http:
+    access-log:
+      enabled: true
+
 astro-server:
   catalog-file-path: /tmp/astro-server/NGC.csv
 

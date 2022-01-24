@@ -20,6 +20,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/pageSize'
         - $ref: '#/components/parameters/pageIndex'
+        - $ref: '#/components/parameters/messier'
+        - $ref: '#/components/parameters/catalog'
+        - $ref: '#/components/parameters/objects'
+        - $ref: '#/components/parameters/constellations'
       responses:
         '200':
           description: OK
@@ -72,7 +76,7 @@ paths:
         in: path
         required: true
     get:
-      summary: Your GET endpoint
+      summary: Get an Object
       tags:
         - OpenNGC
       responses:
@@ -92,7 +96,7 @@ paths:
       description: Get a specific object
   /v1/open-ngc/fetch:
     put:
-      summary: ''
+      summary: Fetch OpenNGC Catalog
       operationId: fetchCatalog
       responses:
         '204':
@@ -103,7 +107,7 @@ paths:
     parameters: [ ]
   /v1/open-ngc/last-update:
     get:
-      summary: Your GET endpoint
+      summary: Get Catalog Last Update
       tags:
         - OpenNGC
       responses:
@@ -115,6 +119,38 @@ paths:
                 $ref: '#/components/schemas/CatalogLastUpdate'
       operationId: getLastCatalogUpdate
       description: Returns date and time of last catalog update
+  /v1/open-ngc/types:
+    get:
+      summary: List Object Types
+      tags:
+        - OpenNGC
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObjectType'
+      operationId: getTypes
+      description: List all object types
+  /v1/open-ngc/constellations:
+    get:
+      summary: List Constellations
+      tags:
+        - OpenNGC
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Constellation'
+      operationId: getConstellations
+      description: List all constellations
 components:
   schemas:
     NGCEntry:
@@ -308,6 +344,46 @@ components:
         format: int32
         default: 0
       description: 'Page number to retrieve, zero based'
+    messier:
+      name: messier
+      in: query
+      required: false
+      schema:
+        type: boolean
+      description: Only Messier objects
+    catalog:
+      name: catalog
+      in: query
+      required: false
+      schema:
+        enum:
+          - IC
+          - NGC
+        type: string
+        pattern: ^(IC|NGC)$
+      description: Use either `IC` or `NGC`  catalog
+    objects:
+      name: objects
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+        uniqueItems: true
+      description: Only list these objects
+      style: form
+    constellations:
+      name: constellations
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+        uniqueItems: true
+      description: List only objects in this constellations
+      style: form
   responses: { }
 tags:
   - name: OpenNGC
