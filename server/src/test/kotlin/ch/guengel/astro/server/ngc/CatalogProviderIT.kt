@@ -61,7 +61,7 @@ internal class CatalogProviderIT {
         catalog = catalogProvider.fetchCatalog()
         assertThat(catalog.entries).hasSize(9)
 
-        verify(atLeast = 2, atMost = 2) { catalogFetcherMock.fetch() }
+        verify(exactly = 2) { catalogFetcherMock.fetch() }
     }
 
     @Test

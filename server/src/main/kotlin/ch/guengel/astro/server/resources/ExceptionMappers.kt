@@ -10,7 +10,7 @@ import javax.ws.rs.core.Response
 
 class ExceptionMappers {
     @ServerExceptionMapper
-    fun mapIllegalArgument(e: IllegalArgumentException): RestResponse<Error> =
+    fun mapIllegalArgumentException(e: IllegalArgumentException): RestResponse<Error> =
         RestResponse.status(Response.Status.BAD_REQUEST, e.toError())
 
     @ServerExceptionMapper

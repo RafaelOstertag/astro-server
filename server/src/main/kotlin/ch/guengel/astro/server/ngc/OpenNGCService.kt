@@ -1,7 +1,6 @@
 package ch.guengel.astro.server.ngc
 
 import ch.guengel.astro.openngc.Catalog
-import ch.guengel.astro.openngc.CatalogName
 import ch.guengel.astro.openngc.Entry
 import ch.guengel.astro.server.model.CatalogLastUpdate
 import ch.guengel.astro.server.model.Constellation
@@ -29,7 +28,7 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
     fun postConstruct() {
         try {
             val catalog = catalogProvider.loadCatalog()
-            updateAllReferences(catalog)
+            catalogReference.set(catalog)
         } catch (e: Exception) {
             log.error("Error while loading catalog", e)
         }
@@ -38,10 +37,10 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
     fun list(
         pageIndex: Int,
         pageSize: Int,
-        messier: Boolean?,
-        catalog: String?,
-        objects: Set<String>?,
-        constellations: Set<String>?,
+        messier: Boolean? = null,
+        catalog: String? = null,
+        objects: Set<String>? = null,
+        constellations: Set<String>? = null,
     ): PagedNGCEntryList {
         require(pageIndex >= 0) { "page index must be equal or greater than 0" }
         require(pageSize > 0) { "page size must be greater than 1" }
@@ -111,8 +110,7 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         }
 
         if (catalog != null) {
-            val catalogName = CatalogName.valueOf(catalog)
-            predicates.add { entry -> entry.catalogName == catalogName }
+            predicates.add { entry -> entry.catalogName.toString() == catalog }
         }
 
         if (objects != null && objects.isNotEmpty()) {
@@ -142,16 +140,12 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         return CatalogLastUpdate().apply { lastUpdated = catalogLastUpdated }
     }
 
-    private fun updateAllReferences(catalog: Catalog) {
-        catalogReference.set(catalog)
-    }
-
     @Scheduled(cron = "{astro-server.catalog-fetch.cron.expression}")
     fun fetchCatalog() {
         log.info("Reload catalog")
         try {
             val catalog = catalogProvider.fetchCatalog()
-            updateAllReferences(catalog)
+            catalogReference.set(catalog)
         } catch (e: Exception) {
             log.error("Error while fetching catalog", e)
         }
