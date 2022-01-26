@@ -2,5 +2,8 @@
   quarkus:
     jacoco:
       reuse-data-file: true
+    keycloak:
+      devservices:
+        enabled: false
   astro-server:
     catalog-file-path: /tmp/test/ngc.csv

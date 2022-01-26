@@ -14,6 +14,7 @@ import io.mockk.verify
 import io.quarkiverse.test.junit.mockk.InjectMock
 import io.quarkus.test.common.http.TestHTTPEndpoint
 import io.quarkus.test.junit.QuarkusTest
+import io.quarkus.test.security.TestSecurity
 import io.restassured.module.kotlin.extensions.Given
 import io.restassured.module.kotlin.extensions.Then
 import io.restassured.module.kotlin.extensions.When
@@ -39,7 +40,8 @@ internal class OpenNgcApiResourceIT {
     }
 
     @Test
-    fun `should fetch catalog`() {
+    @TestSecurity(user = "someuser", roles = ["admin"])
+    fun `should fetch when authenticated with correct role catalog`() {
         justRun { openNGCService.fetchCatalog() }
 
         When {
@@ -49,6 +51,33 @@ internal class OpenNgcApiResourceIT {
         }
 
         verify { openNGCService.fetchCatalog() }
+    }
+
+    @Test
+    @TestSecurity(user = "someuser", roles = ["any-role"])
+    fun `should not allow fetching without the correct role`() {
+        justRun { openNGCService.fetchCatalog() }
+
+        When {
+            put("/fetch")
+        } Then {
+            statusCode(403)
+        }
+
+        verify(exactly = 0) { openNGCService.fetchCatalog() }
+    }
+
+    @Test
+    fun `should not allow fetching without authentication`() {
+        justRun { openNGCService.fetchCatalog() }
+
+        When {
+            put("/fetch")
+        } Then {
+            statusCode(401)
+        }
+
+        verify(exactly = 0) { openNGCService.fetchCatalog() }
     }
 
     @Test

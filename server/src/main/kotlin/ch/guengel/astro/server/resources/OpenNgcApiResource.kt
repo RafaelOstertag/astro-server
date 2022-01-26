@@ -2,9 +2,13 @@ package ch.guengel.astro.server.resources
 
 import ch.guengel.astro.server.api.OpenNgcApi
 import ch.guengel.astro.server.ngc.OpenNGCService
+import org.jboss.resteasy.reactive.NoCache
+import javax.annotation.security.RolesAllowed
 import javax.ws.rs.core.Response
 
 class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcApi {
+    @RolesAllowed("admin")
+    @NoCache
     override fun fetchCatalog(): Response {
         openNGCService.fetchCatalog()
         return Response.noContent().build()

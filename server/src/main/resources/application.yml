@@ -2,6 +2,11 @@ quarkus:
   http:
     access-log:
       enabled: true
+  oidc:
+    auth-server-url: https://sso.guengel.ch/auth/realms/astro
+    client-id: astro-server-service
+    enabled: true
+    discovery-enabled: true
 
 astro-server:
   catalog-file-path: /tmp/astro-server/NGC.csv
