@@ -151,10 +151,72 @@ paths:
                   $ref: '#/components/schemas/Constellation'
       operationId: getConstellations
       description: List all constellations
+  '/v1/open-ngc/{longitude}/{latitude}/{local-time}':
+    parameters:
+      - $ref: '#/components/parameters/longitude'
+      - $ref: '#/components/parameters/latitude'
+      - $ref: '#/components/parameters/local-time'
+    get:
+      summary: Get catalog with horizon coordinates
+      tags:
+        - OpenNGC
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageIndex'
+        - $ref: '#/components/parameters/messier'
+        - $ref: '#/components/parameters/catalog'
+        - $ref: '#/components/parameters/objects'
+        - $ref: '#/components/parameters/constellations'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NGCEntryWithHorizontalCoordinates'
+          headers:
+            x-page-size:
+              schema:
+                type: integer
+              description: Current page size
+            x-page-index:
+              schema:
+                type: integer
+              description: Current page index
+            x-previous-page-index:
+              schema:
+                type: integer
+              description: 'Previous page index, if applicable'
+            x-next-page-index:
+              schema:
+                type: integer
+              description: 'Next page index, if applicable'
+            x-first-page:
+              schema:
+                type: boolean
+              description: Indicates whether or not this is the first page
+            x-last-page:
+              schema:
+                type: boolean
+              description: Indicate whether or not this is the last page
+            x-total-pages:
+              schema:
+                type: integer
+              description: Number of pages with this page size
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: listObjectsExtended
+      description: Get catalog entries with horizon coordinates
 components:
   schemas:
     NGCEntry:
-      title: CatalogEntry
+      title: NGC Catalog Entry
       type: object
       description: Catalog Entry
       properties:
@@ -259,7 +321,7 @@ components:
         - name
         - type
     ObjectType:
-      title: ObjectType
+      title: Object Type
       type: object
       description: Describes object type
       properties:
@@ -270,7 +332,7 @@ components:
           type: string
           description: Object type description
     EquatorialCoordinates:
-      title: EquatorialCoordinates
+      title: Equatorial Coordinates
       type: object
       description: Equatorial coordinates
       properties:
@@ -316,7 +378,7 @@ components:
       required:
         - reason
     CatalogLastUpdate:
-      title: CatalogLastUpdate
+      title: Catalog Last Update
       type: object
       description: Information when catalog was last updated
       properties:
@@ -324,6 +386,40 @@ components:
           type: string
           description: Date/time of last update
           format: date-time
+    NGCEntryWithHorizontalCoordinates:
+      title: NGC Entry With Horizontal Coordinates
+      type: object
+      description: NGC Entry with horizontal coordinates
+      properties:
+        entry:
+          $ref: '#/components/schemas/NGCEntry'
+        horizontalCoordinates:
+          $ref: '#/components/schemas/HorizontalCoordinates'
+      required:
+        - entry
+        - horizontalCoordinates
+    HorizontalCoordinates:
+      title: HorizontalCoordinates
+      type: object
+      description: Horizontal Coordinates
+      properties:
+        alt:
+          type: string
+          description: Altitude
+        az:
+          type: string
+          description: Azmiuth
+        altDec:
+          type: number
+          description: Altitude in decimal degrees
+        azDec:
+          description: Azimuth in decimal degrees
+          type: number
+      required:
+        - alt
+        - az
+        - altDec
+        - azDec
   parameters:
     pageSize:
       name: page-size
@@ -384,6 +480,32 @@ components:
         uniqueItems: true
       description: List only objects in this constellations
       style: form
+    longitude:
+      name: longitude
+      in: path
+      required: true
+      schema:
+        type: number
+        minimum: -180
+        maximum: 180
+      description: 'Longitude of the observer. Positive values are eastwards, negative values are westwards'
+    latitude:
+      name: latitude
+      in: path
+      required: true
+      schema:
+        type: number
+        minimum: -90
+        maximum: 90
+      description: 'Latitude of the observer. Positive values are northwards, negative values are southwards'
+    local-time:
+      name: local-time
+      in: path
+      required: true
+      schema:
+        type: string
+        format: date-time
+      description: Local time of the observer
   responses: { }
 tags:
   - name: OpenNGC

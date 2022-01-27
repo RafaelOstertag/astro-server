@@ -1,13 +1,18 @@
 package ch.guengel.astro.server.ngc
 
+import ch.guengel.astro.coordinates.Angle
+import ch.guengel.astro.coordinates.GeographicCoordinates
 import ch.guengel.astro.openngc.Catalog
 import ch.guengel.astro.openngc.Entry
+import ch.guengel.astro.openngc.ExtendedEntry
 import ch.guengel.astro.server.model.CatalogLastUpdate
 import ch.guengel.astro.server.model.Constellation
 import ch.guengel.astro.server.model.NGCEntry
+import ch.guengel.astro.server.model.NGCEntryWithHorizontalCoordinates
 import ch.guengel.astro.server.model.ObjectType
 import io.quarkus.scheduler.Scheduled
 import org.jboss.logging.Logger
+import java.time.OffsetDateTime
 import java.util.concurrent.atomic.AtomicReference
 import javax.annotation.PostConstruct
 import javax.enterprise.context.ApplicationScoped
@@ -41,14 +46,14 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         catalog: String? = null,
         objects: Set<String>? = null,
         constellations: Set<String>? = null,
-    ): PagedNGCEntryList {
+    ): PagedList<NGCEntry> {
         require(pageIndex >= 0) { "page index must be equal or greater than 0" }
         require(pageSize > 0) { "page size must be greater than 1" }
 
         val openNgcCatalog: Catalog? = catalogReference.get()
         if (openNgcCatalog == null) {
             log.error("No catalog loaded")
-            return PagedNGCEntryList(
+            return PagedList(
                 entryList = emptyList(),
                 pageIndex = 0,
                 pageSize = pageSize,
@@ -63,12 +68,66 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         val entryPredicates = compileEntryPredicates(messier, catalog, objects, constellations)
 
         val allEntries =
-            if (entryPredicates.isEmpty()) openNgcCatalog.entries else openNgcCatalog.entries.filter { entry: Entry ->
+            if (entryPredicates.isEmpty()) openNgcCatalog.find { true } else openNgcCatalog.find { entry: Entry ->
                 entryPredicates
                     .map { predicate -> predicate(entry) }
                     .reduce { acc, b -> acc && b }
             }
 
+        return listToPage(allEntries, pageSize, pageIndex, catalogEntryMapper::map)
+    }
+
+    fun listExtended(
+        longitude: Double,
+        latitude: Double,
+        localTime: OffsetDateTime,
+        pageIndex: Int,
+        pageSize: Int,
+        messier: Boolean? = null,
+        catalog: String? = null,
+        objects: Set<String>? = null,
+        constellations: Set<String>? = null,
+    ): PagedList<NGCEntryWithHorizontalCoordinates> {
+        require(pageIndex >= 0) { "page index must be equal or greater than 0" }
+        require(pageSize > 0) { "page size must be greater than 1" }
+
+        val openNgcCatalog: Catalog? = catalogReference.get()
+        if (openNgcCatalog == null) {
+            log.error("No catalog loaded")
+            return PagedList(
+                entryList = emptyList(),
+                pageIndex = 0,
+                pageSize = pageSize,
+                numberOfPages = -1,
+                nextPageIndex = null,
+                previousPageIndex = null,
+                firstPage = false,
+                lastPage = false
+            )
+        }
+
+        val entryPredicates = compileEntryPredicates(messier, catalog, objects, constellations)
+
+        val geographicCoordinates = GeographicCoordinates(Angle.of(latitude), Angle.of(longitude))
+
+        val allEntries =
+            if (entryPredicates.isEmpty()) openNgcCatalog.findExtendedEntries(geographicCoordinates,
+                localTime) { true } else openNgcCatalog.findExtendedEntries(geographicCoordinates,
+                localTime) { extendedEntry: ExtendedEntry ->
+                entryPredicates
+                    .map { predicate -> predicate(extendedEntry.entry) }
+                    .reduce { acc, b -> acc && b }
+            }
+
+        return listToPage(allEntries, pageSize, pageIndex, catalogEntryMapper::map)
+    }
+
+    private fun <O, I> listToPage(
+        allEntries: List<I>,
+        pageSize: Int,
+        pageIndex: Int,
+        mapper: (I) -> O,
+    ): PagedList<O> {
         val catalogSize = allEntries.size
         if (catalogSize == 0) {
             throw NoObjectsFoundError("No objects found for specified criteria")
@@ -83,11 +142,11 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         val toIndex = fromIndex + pageSize
         val entries = allEntries
             .subList(fromIndex, if (toIndex >= catalogSize) catalogSize else toIndex)
-            .map { catalogEntryMapper.map(it) }
+            .map { mapper(it) }
 
         val isFirstPage = pageIndex == 0
         val isLastPage = pageIndex == numberOfPages - 1
-        return PagedNGCEntryList(
+        return PagedList(
             entries,
             pageIndex = pageIndex,
             pageSize = pageSize,

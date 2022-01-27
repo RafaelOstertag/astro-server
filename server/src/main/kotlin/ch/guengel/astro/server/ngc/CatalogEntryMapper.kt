@@ -1,9 +1,12 @@
 package ch.guengel.astro.server.ngc
 
 import ch.guengel.astro.openngc.Entry
+import ch.guengel.astro.openngc.ExtendedEntry
 import ch.guengel.astro.server.model.Constellation
 import ch.guengel.astro.server.model.EquatorialCoordinates
+import ch.guengel.astro.server.model.HorizontalCoordinates
 import ch.guengel.astro.server.model.NGCEntry
+import ch.guengel.astro.server.model.NGCEntryWithHorizontalCoordinates
 import ch.guengel.astro.server.model.ObjectType
 import javax.enterprise.context.ApplicationScoped
 
@@ -55,6 +58,18 @@ class CatalogEntryMapper {
         openNGCNotes = entry.openNGCNotes
     }
 
+    fun map(extendedEntry: ExtendedEntry): NGCEntryWithHorizontalCoordinates = ngcEntryWithHorizontalCoordinates {
+        entry = map(extendedEntry.entry)
+        horizontalCoordinates = map(extendedEntry.horizontalCoordinates)
+    }
+
+    fun map(horizontalCoordinates: ch.guengel.astro.coordinates.HorizontalCoordinates) = horizontalCoordinates {
+        alt = horizontalCoordinates.altitude.toString()
+        az = horizontalCoordinates.azimuth.toString()
+        altDec = horizontalCoordinates.altitude.asDecimal()
+        azDec = horizontalCoordinates.azimuth.asDecimal()
+    }
+
     fun map(objectType: ch.guengel.astro.openngc.ObjectType): ObjectType = objectType {
         abbrev = objectType.abbrev
         description = objectType.description
@@ -65,6 +80,11 @@ class CatalogEntryMapper {
         fullname = constellation.fullname
     }
 
+    private fun ngcEntryWithHorizontalCoordinates(init: NGCEntryWithHorizontalCoordinates.() -> Unit): NGCEntryWithHorizontalCoordinates {
+        val ngcEntryWithHorizonCoordinates = NGCEntryWithHorizontalCoordinates()
+        ngcEntryWithHorizonCoordinates.init()
+        return ngcEntryWithHorizonCoordinates
+    }
 
     private fun ngcEntry(init: NGCEntry.() -> Unit): NGCEntry {
         val ngcEntry = NGCEntry()
@@ -76,6 +96,12 @@ class CatalogEntryMapper {
         val equatorialCoordinates = EquatorialCoordinates()
         equatorialCoordinates.init()
         return equatorialCoordinates
+    }
+
+    private fun horizontalCoordinates(init: HorizontalCoordinates.() -> Unit): HorizontalCoordinates {
+        val horizonCoordinates = HorizontalCoordinates()
+        horizonCoordinates.init()
+        return horizonCoordinates
     }
 
     private fun objectType(init: ObjectType.() -> Unit): ObjectType {

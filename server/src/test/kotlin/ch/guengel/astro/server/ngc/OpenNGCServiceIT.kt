@@ -10,11 +10,16 @@ import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.assertions.isSuccess
 import assertk.assertions.isTrue
+import ch.guengel.astro.coordinates.Angle
+import ch.guengel.astro.coordinates.GeographicCoordinates
+import ch.guengel.astro.coordinates.toHorizonCoordinates
 import ch.guengel.astro.openngc.Catalog
 import ch.guengel.astro.openngc.Constellation
 import ch.guengel.astro.openngc.Entry
 import ch.guengel.astro.openngc.ObjectType
+import ch.guengel.astro.server.easyRandomParameters
 import ch.guengel.astro.server.model.CatalogLastUpdate
+import ch.guengel.astro.server.model.NGCEntryWithHorizontalCoordinates
 import io.mockk.every
 import io.mockk.verify
 import io.quarkiverse.test.junit.mockk.InjectMock
@@ -29,12 +34,15 @@ import javax.inject.Inject
 import kotlin.math.ceil
 import kotlin.streams.toList
 
+private const val longitude = 8.0
+private const val latitude = 47.0
+
 @QuarkusTest
 internal class OpenNGCServiceIT {
-    val numberOfCatalogEntries = 100
-    private var easyRandom = EasyRandom()
+    private val numberOfCatalogEntries = 100
+    private var easyRandom = EasyRandom(easyRandomParameters)
 
-    lateinit var catalogEntries: List<Entry>
+    private lateinit var catalogEntries: List<Entry>
 
     @InjectMock
     lateinit var catalogProvider: CatalogProvider
@@ -49,6 +57,7 @@ internal class OpenNGCServiceIT {
     fun beforeEach() {
         catalogEntries = easyRandom.objects(Entry::class.java, numberOfCatalogEntries).toList()
         every { catalogProvider.loadCatalog() } returns Catalog(catalogEntries)
+        openNGCService.postConstruct()
     }
 
     @Test
@@ -60,7 +69,6 @@ internal class OpenNGCServiceIT {
     fun `should get all constellations`() {
         assertThat(openNGCService.constellations).hasSize(Constellation.values().size)
     }
-
 
     @Test
     fun `list pages correctly first page`() {
@@ -191,6 +199,161 @@ internal class OpenNGCServiceIT {
         assertThat(result.entryList.first()).isEqualTo(catalogEntryMapper.map(needle))
     }
 
+    @Test
+    fun `list extended pages correctly first page`() {
+        var result = openNGCService.listExtended(longitude,
+            latitude,
+            OffsetDateTime.now(),
+            0,
+            1)
+        assertThat(result.entryList).hasSize(1)
+        assertThat(result.firstPage).isTrue()
+        assertThat(result.lastPage).isFalse()
+        assertThat(result.numberOfPages).isEqualTo(numberOfCatalogEntries)
+        assertThat(result.pageIndex).isEqualTo(0)
+        assertThat(result.pageSize).isEqualTo(1)
+        assertThat(result.nextPageIndex).isNotNull().isEqualTo(1)
+        assertThat(result.previousPageIndex).isNull()
+
+        result = openNGCService.listExtended(longitude, latitude, OffsetDateTime.now(), 0, 24)
+        assertThat(result.entryList).hasSize(24)
+        assertThat(result.firstPage).isTrue()
+        assertThat(result.lastPage).isFalse()
+        assertThat(result.numberOfPages).isEqualTo(ceil(numberOfCatalogEntries / 24.0).toInt())
+        assertThat(result.pageIndex).isEqualTo(0)
+        assertThat(result.pageSize).isEqualTo(24)
+        assertThat(result.nextPageIndex).isNotNull().isEqualTo(1)
+        assertThat(result.previousPageIndex).isNull()
+
+        result = openNGCService.listExtended(longitude, latitude, OffsetDateTime.now(), 0, numberOfCatalogEntries)
+        assertThat(result.entryList).hasSize(numberOfCatalogEntries)
+        assertThat(result.firstPage).isTrue()
+        assertThat(result.lastPage).isTrue()
+        assertThat(result.numberOfPages).isEqualTo(1)
+        assertThat(result.pageIndex).isEqualTo(0)
+        assertThat(result.pageSize).isEqualTo(numberOfCatalogEntries)
+        assertThat(result.nextPageIndex).isNull()
+        assertThat(result.previousPageIndex).isNull()
+
+        result = openNGCService.listExtended(longitude, latitude, OffsetDateTime.now(), 0, numberOfCatalogEntries + 1)
+        assertThat(result.entryList).hasSize(numberOfCatalogEntries)
+        assertThat(result.firstPage).isTrue()
+        assertThat(result.lastPage).isTrue()
+        assertThat(result.numberOfPages).isEqualTo(1)
+        assertThat(result.pageIndex).isEqualTo(0)
+        assertThat(result.pageSize).isEqualTo(numberOfCatalogEntries + 1)
+        assertThat(result.nextPageIndex).isNull()
+        assertThat(result.previousPageIndex).isNull()
+    }
+
+    @Test
+    fun `list extended pages correctly last page`() {
+        val result = openNGCService.listExtended(longitude, latitude, OffsetDateTime.now(), 4, 24)
+        assertThat(result.entryList).hasSize(4)
+        assertThat(result.firstPage).isFalse()
+        assertThat(result.lastPage).isTrue()
+        assertThat(result.numberOfPages).isEqualTo(ceil(numberOfCatalogEntries / 24.0).toInt())
+        assertThat(result.pageIndex).isEqualTo(4)
+        assertThat(result.pageSize).isEqualTo(24)
+        assertThat(result.nextPageIndex).isNull()
+        assertThat(result.previousPageIndex).isNotNull().isEqualTo(3)
+    }
+
+    @Test
+    fun `list extended should correctly handle invalid page input`() {
+        assertThat { openNGCService.listExtended(longitude, latitude, OffsetDateTime.now(), -1, 25) }
+            .isFailure().hasClass(IllegalArgumentException::class)
+        assertThat { openNGCService.listExtended(longitude, latitude, OffsetDateTime.now(), 0, 0) }
+            .isFailure().hasClass(IllegalArgumentException::class)
+        assertThat { openNGCService.listExtended(longitude, latitude, OffsetDateTime.now(), 4, 25) }
+            .isFailure().hasClass(PageOutOfBoundsError::class)
+    }
+
+    @RepeatedTest(value = 10, name = RepeatedTest.LONG_DISPLAY_NAME)
+    fun `list extended should correctly filter list`() {
+        val needle = catalogEntries.random()
+
+        val localTime = OffsetDateTime.now()
+        val result = openNGCService.listExtended(longitude, latitude, localTime, 0,
+            numberOfCatalogEntries,
+            messier = needle.isMessier(),
+            catalog = needle.catalogName.name,
+            objects = setOf(needle.name),
+            constellations = setOf(needle.constellation!!.fullname)
+        )
+        assertThat(result.entryList).hasSize(1)
+        val ngcEntryWithHorizonCoordinates = result.entryList.first()
+        assertNgcEntryWithHorzonCoordinates(ngcEntryWithHorizonCoordinates, needle, localTime)
+    }
+
+    @Test
+    fun `list extended should throw correct exception when no objects are found`() {
+        assertThat {
+            openNGCService.listExtended(longitude, latitude, OffsetDateTime.now(), 0,
+                numberOfCatalogEntries,
+                objects = setOf(UUID.randomUUID().toString())
+            )
+        }.isFailure().hasClass(NoObjectsFoundError::class)
+    }
+
+    @Test
+    fun `list extended should filter by constellation abbreviation and full name`() {
+        val needle = catalogEntries.random()
+
+        val localTime = OffsetDateTime.now()
+        var result = openNGCService.listExtended(longitude,
+            latitude,
+            localTime,
+            0,
+            numberOfCatalogEntries,
+            messier = needle.isMessier(),
+            catalog = needle.catalogName.name,
+            objects = setOf(needle.name),
+            constellations = setOf(needle.constellation!!.fullname, UUID.randomUUID().toString())
+        )
+        assertThat(result.entryList).hasSize(1)
+        assertNgcEntryWithHorzonCoordinates(result.entryList.first(), needle, localTime)
+
+        result = openNGCService.listExtended(longitude,
+            latitude,
+            localTime,
+            0,
+            numberOfCatalogEntries,
+            messier = needle.isMessier(),
+            catalog = needle.catalogName.name,
+            objects = setOf(needle.name),
+            constellations = setOf(needle.constellation!!.abbrev, UUID.randomUUID().toString())
+        )
+        assertThat(result.entryList).hasSize(1)
+        assertNgcEntryWithHorzonCoordinates(result.entryList.first(), needle, localTime)
+
+        result = openNGCService.listExtended(longitude,
+            latitude,
+            localTime,
+            0,
+            numberOfCatalogEntries,
+            messier = needle.isMessier(),
+            catalog = needle.catalogName.name,
+            objects = setOf(needle.name),
+            constellations = setOf(
+                needle.constellation!!.abbrev,
+                needle.constellation!!.fullname,
+                UUID.randomUUID().toString())
+        )
+        assertThat(result.entryList).hasSize(1)
+        assertNgcEntryWithHorzonCoordinates(result.entryList.first(), needle, localTime)
+    }
+
+    private fun assertNgcEntryWithHorzonCoordinates(
+        ngcEntryWithHorizonCoordinates: NGCEntryWithHorizontalCoordinates,
+        entry: Entry,
+        localTime: OffsetDateTime,
+    ) {
+        assertThat(ngcEntryWithHorizonCoordinates.entry).isEqualTo(catalogEntryMapper.map(entry))
+        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates)
+            .isEqualTo(catalogEntryMapper.map(entry.equatorialCoordinates!!.toHorizonCoordinates(
+                GeographicCoordinates(Angle.of(latitude), Angle.of(longitude)), localTime)))
+    }
 
     @Test
     fun `should get object`() {

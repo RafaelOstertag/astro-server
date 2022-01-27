@@ -4,12 +4,15 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import ch.guengel.astro.openngc.Constellation
 import ch.guengel.astro.openngc.Entry
+import ch.guengel.astro.openngc.ExtendedEntry
 import ch.guengel.astro.openngc.ObjectType
+import ch.guengel.astro.server.easyRandomParameters
+import ch.guengel.astro.server.model.NGCEntry
 import org.jeasy.random.EasyRandom
 import org.junit.jupiter.api.Test
 
 internal class CatalogEntryMapperTest {
-    private val easyRandom = EasyRandom()
+    private val easyRandom = EasyRandom(easyRandomParameters)
     private val catalogEntryMapper = CatalogEntryMapper()
 
     @Test
@@ -17,6 +20,10 @@ internal class CatalogEntryMapperTest {
         val entry = easyRandom.nextObject(Entry::class.java)
         val ngcEntry = catalogEntryMapper.map(entry)
 
+        assertNgcEntry(ngcEntry, entry)
+    }
+
+    private fun assertNgcEntry(ngcEntry: NGCEntry, entry: Entry) {
         assertThat(ngcEntry.catalogName).isEqualTo(entry.catalogName.toString())
         assertThat(ngcEntry.name).isEqualTo(entry.name)
         assertThat(ngcEntry.type.abbrev).isEqualTo(entry.objectType.abbrev)
@@ -70,5 +77,18 @@ internal class CatalogEntryMapperTest {
             assertThat(constellationModel.abbrev).isEqualTo(constellation.abbrev)
             assertThat(constellationModel.fullname).isEqualTo(constellation.fullname)
         }
+    }
+
+    @Test
+    fun `should map entry with horizontal coordinates`() {
+        val extendedEntry = easyRandom.nextObject(ExtendedEntry::class.java)
+        val ngcEntryWithHorizonCoordinates = catalogEntryMapper.map(extendedEntry)
+
+        assertNgcEntry(ngcEntryWithHorizonCoordinates.entry, extendedEntry.entry)
+        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.alt).isEqualTo(extendedEntry.horizontalCoordinates.altitude.toString())
+        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.altDec).isEqualTo(extendedEntry.horizontalCoordinates.altitude.asDecimal())
+
+        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.az).isEqualTo(extendedEntry.horizontalCoordinates.azimuth.toString())
+        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.azDec).isEqualTo(extendedEntry.horizontalCoordinates.azimuth.asDecimal())
     }
 }

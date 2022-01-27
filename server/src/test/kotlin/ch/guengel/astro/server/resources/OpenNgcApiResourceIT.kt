@@ -7,7 +7,7 @@ import ch.guengel.astro.server.ngc.NoObjectsFoundError
 import ch.guengel.astro.server.ngc.ObjectNotFoundError
 import ch.guengel.astro.server.ngc.OpenNGCService
 import ch.guengel.astro.server.ngc.PageOutOfBoundsError
-import ch.guengel.astro.server.ngc.PagedNGCEntryList
+import ch.guengel.astro.server.ngc.PagedList
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.verify
@@ -21,6 +21,7 @@ import io.restassured.module.kotlin.extensions.When
 import org.jeasy.random.EasyRandom
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.OffsetDateTime
 import kotlin.streams.toList
 
 @QuarkusTest
@@ -152,7 +153,7 @@ internal class OpenNgcApiResourceIT {
         every {
             openNGCService.list(0, 25, constellations = emptySet(),
                 objects = emptySet())
-        } returns PagedNGCEntryList(listOf(), 2, 4, 5, 6, 7, true, true)
+        } returns PagedList(listOf(), 2, 4, 5, 6, 7, true, true)
 
         When {
             get()
@@ -175,6 +176,42 @@ internal class OpenNgcApiResourceIT {
     }
 
     @Test
+    fun `should list extended objects`() {
+        val now = OffsetDateTime.now()
+        every {
+            openNGCService.listExtended(
+                8.83,
+                47.32,
+                now,
+                0,
+                25,
+                constellations = emptySet(),
+                objects = emptySet())
+        } returns PagedList(listOf(), 2, 4, 5, 6, 7, true, true)
+
+        When {
+            get("{longitude}/{latitude}/{localTime}", mapOf(
+                "longitude" to "8.83",
+                "latitude" to "47.32",
+                "localTime" to now.toString()))
+        } Then {
+            statusCode(200)
+            header("x-page-index", "2")
+            header("x-page-size", "4")
+            header("x-total-pages", "5")
+            header("x-next-page-index", "6")
+            header("x-previous-page-index", "7")
+            header("x-first-page", "true")
+            header("x-last-page", "true")
+        }
+
+        verify {
+            openNGCService.listExtended(8.83, 47.32, now, 0, 25, constellations = emptySet(),
+                objects = emptySet())
+        }
+    }
+
+    @Test
     fun `should list objects with query parameters`() {
         every {
             openNGCService.list(2, 4,
@@ -182,7 +219,7 @@ internal class OpenNgcApiResourceIT {
                 catalog = "IC",
                 objects = setOf("object1", "object2"),
                 constellations = setOf("cons1", "cons2"))
-        } returns PagedNGCEntryList(listOf(), 2, 4, 5, 6, 7, true, true)
+        } returns PagedList(listOf(), 2, 4, 5, 6, 7, true, true)
 
         Given {
             queryParam("page-index", "2")
@@ -201,6 +238,52 @@ internal class OpenNgcApiResourceIT {
 
         verify {
             openNGCService.list(2, 4,
+                messier = true,
+                catalog = "IC",
+                objects = setOf("object1", "object2"),
+                constellations = setOf("cons1", "cons2"))
+        }
+    }
+
+    @Test
+    fun `should list extended objects with query parameters`() {
+        val now = OffsetDateTime.now()
+        every {
+            openNGCService.listExtended(8.83,
+                47.32,
+                now,
+                2,
+                4,
+                messier = true,
+                catalog = "IC",
+                objects = setOf("object1", "object2"),
+                constellations = setOf("cons1", "cons2"))
+        } returns PagedList(listOf(), 2, 4, 5, 6, 7, true, true)
+
+        Given {
+            queryParam("page-index", "2")
+            queryParam("page-size", "4")
+            queryParam("messier", "true")
+            queryParam("catalog", "IC")
+            queryParam("objects", "object1")
+            queryParam("objects", "object2")
+            queryParam("constellations", "cons1")
+            queryParam("constellations", "cons2")
+        } When {
+            get("{longitude}/{latitude}/{localTime}", mapOf(
+                "longitude" to "8.83",
+                "latitude" to "47.32",
+                "localTime" to now.toString()))
+        } Then {
+            statusCode(200)
+        }
+
+        verify {
+            openNGCService.listExtended(8.83,
+                47.32,
+                now,
+                2,
+                4,
                 messier = true,
                 catalog = "IC",
                 objects = setOf("object1", "object2"),

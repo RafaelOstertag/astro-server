@@ -2,7 +2,9 @@ package ch.guengel.astro.server.resources
 
 import ch.guengel.astro.server.api.OpenNgcApi
 import ch.guengel.astro.server.ngc.OpenNGCService
+import ch.guengel.astro.server.ngc.PagedList
 import org.jboss.resteasy.reactive.NoCache
+import java.time.OffsetDateTime
 import javax.annotation.security.RolesAllowed
 import javax.ws.rs.core.Response
 
@@ -22,6 +24,29 @@ class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcAp
 
     override fun getTypes(): Response = Response.ok(openNGCService.objectTypes).build()
 
+    override fun listObjectsExtended(
+        longitude: Double,
+        latitude: Double,
+        localTime: OffsetDateTime,
+        pageSize: Int,
+        pageIndex: Int,
+        messier: Boolean?,
+        catalog: String?,
+        objects: MutableSet<String>?,
+        constellations: MutableSet<String>?,
+    ): Response {
+        val pagedEntryList = openNGCService.listExtended(longitude,
+            latitude,
+            localTime,
+            pageIndex,
+            pageSize,
+            messier,
+            catalog,
+            objects,
+            constellations)
+        return pagedEntryList.toResponse()
+    }
+
     override fun listObjects(
         pageSize: Int,
         pageIndex: Int,
@@ -31,19 +56,23 @@ class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcAp
         constellations: Set<String>?,
     ): Response {
         val pagedEntryList = openNGCService.list(pageIndex, pageSize, messier, catalog, objects, constellations)
-        val response = Response.ok(pagedEntryList.entryList)
-            .header("x-page-size", pagedEntryList.pageSize)
-            .header("x-page-index", pagedEntryList.pageIndex)
-            .header("x-first-page", pagedEntryList.firstPage)
-            .header("x-last-page", pagedEntryList.lastPage)
-            .header("x-total-pages", pagedEntryList.numberOfPages)
+        return pagedEntryList.toResponse()
+    }
 
-        if (pagedEntryList.previousPageIndex != null) {
-            response.header("x-previous-page-index", pagedEntryList.previousPageIndex)
+    private fun <T> PagedList<T>.toResponse(): Response {
+        val response = Response.ok(entryList)
+            .header("x-page-size", pageSize)
+            .header("x-page-index", pageIndex)
+            .header("x-first-page", firstPage)
+            .header("x-last-page", lastPage)
+            .header("x-total-pages", numberOfPages)
+
+        if (previousPageIndex != null) {
+            response.header("x-previous-page-index", previousPageIndex)
         }
 
-        if (pagedEntryList.nextPageIndex != null) {
-            response.header("x-next-page-index", pagedEntryList.nextPageIndex)
+        if (nextPageIndex != null) {
+            response.header("x-next-page-index", nextPageIndex)
         }
 
         return response.build()

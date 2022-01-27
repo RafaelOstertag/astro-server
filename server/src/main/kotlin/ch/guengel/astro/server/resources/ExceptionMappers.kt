@@ -4,6 +4,7 @@ import ch.guengel.astro.server.model.Error
 import ch.guengel.astro.server.ngc.NoObjectsFoundError
 import ch.guengel.astro.server.ngc.ObjectNotFoundError
 import ch.guengel.astro.server.ngc.PageOutOfBoundsError
+import org.jboss.logging.Logger
 import org.jboss.resteasy.reactive.RestResponse
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper
 import javax.ws.rs.core.Response
@@ -26,10 +27,16 @@ class ExceptionMappers {
         RestResponse.status(Response.Status.NOT_FOUND, e.toError())
 
     @ServerExceptionMapper
-    fun mapException(e: Exception): RestResponse<Error> =
-        RestResponse.status(Response.Status.INTERNAL_SERVER_ERROR, e.toError())
+    fun mapException(e: Exception): RestResponse<Error> {
+        log.error("Caught internal error", e)
+        return RestResponse.status(Response.Status.INTERNAL_SERVER_ERROR, e.toError())
+    }
 
     private fun Exception.toError(): Error = Error().also { errorResponse ->
         errorResponse.reason = message ?: "no reason specified"
+    }
+
+    private companion object {
+        val log: Logger = Logger.getLogger(ExceptionMappers::class.java)
     }
 }
