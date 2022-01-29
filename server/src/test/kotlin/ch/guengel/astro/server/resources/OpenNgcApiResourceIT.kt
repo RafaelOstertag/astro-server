@@ -242,15 +242,16 @@ internal class OpenNgcApiResourceIT {
     @Test
     fun `should list extended objects`() {
         val now = OffsetDateTime.now()
+        val arguments = OpenNGCService.ListExtendedArguments(
+            8.83,
+            47.32,
+            now,
+            0,
+            25,
+            constellations = emptySet(),
+            objects = emptySet())
         every {
-            openNGCService.listExtended(
-                8.83,
-                47.32,
-                now,
-                0,
-                25,
-                constellations = emptySet(),
-                objects = emptySet())
+            openNGCService.listExtended(arguments)
         } returns PagedList(listOf(), 2, 4, 5, 6, 7, true, true)
 
         When {
@@ -270,8 +271,7 @@ internal class OpenNgcApiResourceIT {
         }
 
         verify {
-            openNGCService.listExtended(8.83, 47.32, now, 0, 25, constellations = emptySet(),
-                objects = emptySet())
+            openNGCService.listExtended(arguments)
         }
     }
 
@@ -312,16 +312,19 @@ internal class OpenNgcApiResourceIT {
     @Test
     fun `should list extended objects with query parameters`() {
         val now = OffsetDateTime.now()
+        val arguments = OpenNGCService.ListExtendedArguments(
+            8.83,
+            47.32,
+            now,
+            2,
+            4,
+            messier = true,
+            catalog = "IC",
+            objects = setOf("object1", "object2"),
+            constellations = setOf("cons1", "cons2")
+        )
         every {
-            openNGCService.listExtended(8.83,
-                47.32,
-                now,
-                2,
-                4,
-                messier = true,
-                catalog = "IC",
-                objects = setOf("object1", "object2"),
-                constellations = setOf("cons1", "cons2"))
+            openNGCService.listExtended(arguments)
         } returns PagedList(listOf(), 2, 4, 5, 6, 7, true, true)
 
         Given {
@@ -343,15 +346,7 @@ internal class OpenNgcApiResourceIT {
         }
 
         verify {
-            openNGCService.listExtended(8.83,
-                47.32,
-                now,
-                2,
-                4,
-                messier = true,
-                catalog = "IC",
-                objects = setOf("object1", "object2"),
-                constellations = setOf("cons1", "cons2"))
+            openNGCService.listExtended(arguments)
         }
     }
 

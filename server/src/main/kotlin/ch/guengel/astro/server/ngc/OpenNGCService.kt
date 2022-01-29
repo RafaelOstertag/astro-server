@@ -77,19 +77,21 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         return listToPage(allEntries, pageSize, pageIndex, catalogEntryMapper::map)
     }
 
-    fun listExtended(
-        longitude: Double,
-        latitude: Double,
-        localTime: OffsetDateTime,
-        pageIndex: Int,
-        pageSize: Int,
-        messier: Boolean? = null,
-        catalog: String? = null,
-        objects: Set<String>? = null,
-        constellations: Set<String>? = null,
-    ): PagedList<NGCEntryWithHorizontalCoordinates> {
-        require(pageIndex >= 0) { "page index must be equal or greater than 0" }
-        require(pageSize > 0) { "page size must be greater than 1" }
+    data class ListExtendedArguments(
+        val longitude: Double,
+        val latitude: Double,
+        val localTime: OffsetDateTime,
+        val pageIndex: Int,
+        val pageSize: Int,
+        val messier: Boolean? = null,
+        val catalog: String? = null,
+        val objects: Set<String>? = null,
+        val constellations: Set<String>? = null,
+    )
+
+    fun listExtended(arguments: ListExtendedArguments): PagedList<NGCEntryWithHorizontalCoordinates> {
+        require(arguments.pageIndex >= 0) { "page index must be equal or greater than 0" }
+        require(arguments.pageSize > 0) { "page size must be greater than 1" }
 
         val openNgcCatalog: Catalog? = catalogReference.get()
         if (openNgcCatalog == null) {
@@ -97,7 +99,7 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
             return PagedList(
                 entryList = emptyList(),
                 pageIndex = 0,
-                pageSize = pageSize,
+                pageSize = arguments.pageSize,
                 numberOfPages = -1,
                 nextPageIndex = null,
                 previousPageIndex = null,
@@ -106,20 +108,21 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
             )
         }
 
-        val entryPredicates = compileEntryPredicates(messier, catalog, objects, constellations)
+        val entryPredicates =
+            compileEntryPredicates(arguments.messier, arguments.catalog, arguments.objects, arguments.constellations)
 
-        val geographicCoordinates = GeographicCoordinates(Angle.of(latitude), Angle.of(longitude))
+        val geographicCoordinates = GeographicCoordinates(Angle.of(arguments.latitude), Angle.of(arguments.longitude))
 
         val allEntries =
             if (entryPredicates.isEmpty()) openNgcCatalog.findExtendedEntries(geographicCoordinates,
-                localTime) { true } else openNgcCatalog.findExtendedEntries(geographicCoordinates,
-                localTime) { extendedEntry: ExtendedEntry ->
+                arguments.localTime) { true } else openNgcCatalog.findExtendedEntries(geographicCoordinates,
+                arguments.localTime) { extendedEntry: ExtendedEntry ->
                 entryPredicates
                     .map { predicate -> predicate(extendedEntry.entry) }
                     .reduce { acc, b -> acc && b }
             }
 
-        return listToPage(allEntries, pageSize, pageIndex, catalogEntryMapper::map)
+        return listToPage(allEntries, arguments.pageSize, arguments.pageIndex, catalogEntryMapper::map)
     }
 
     private fun <O, I> listToPage(

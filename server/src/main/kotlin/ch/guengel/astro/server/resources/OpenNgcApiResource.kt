@@ -41,17 +41,18 @@ class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcAp
         catalog: String?,
         objects: MutableSet<String>?,
         constellations: MutableSet<String>?,
-    ): Response {
-        val pagedEntryList = openNGCService.listExtended(longitude,
-            latitude,
-            localTime,
-            pageIndex,
-            pageSize,
-            messier,
-            catalog,
-            objects,
-            constellations)
-        return pagedEntryList.toResponse()
+    ): Response = OpenNGCService.ListExtendedArguments(
+        longitude,
+        latitude,
+        localTime,
+        pageIndex,
+        pageSize,
+        messier,
+        catalog,
+        objects,
+        constellations
+    ).let {
+        openNGCService.listExtended(it).toResponse()
     }
 
     override fun listObjects(
@@ -61,10 +62,7 @@ class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcAp
         catalog: String?,
         objects: Set<String>?,
         constellations: Set<String>?,
-    ): Response {
-        val pagedEntryList = openNGCService.list(pageIndex, pageSize, messier, catalog, objects, constellations)
-        return pagedEntryList.toResponse()
-    }
+    ): Response = openNGCService.list(pageIndex, pageSize, messier, catalog, objects, constellations).toResponse()
 
     private fun <T> PagedList<T>.toResponse(): Response {
         val response = Response.ok(entryList)
