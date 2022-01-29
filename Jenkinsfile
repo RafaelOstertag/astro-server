@@ -64,7 +64,24 @@ pipeline {
             }
         }
 
-        stage("Nexus Deployment") {
+        stage("Nexus Snapshot Deployment") {
+            when {
+                allOf {
+                    not {
+                        triggeredBy 'TimerTrigger'
+                    }
+                    branch "develop"
+                }
+            }
+
+            steps {
+                configFileProvider([configFile(fileId: '4f3d0128-0fdd-4de7-8536-5cbdd54a8baf', variable: 'MAVEN_SETTINGS_XML')]) {
+                    sh 'mvn -B -s "$MAVEN_SETTINGS_XML" -DskipTests -Dquarkus.package.type=uber-jar deploy'
+                }
+            }
+        }
+
+        stage("Nexus Release Deployment") {
             when {
                 allOf {
                     not {

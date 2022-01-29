@@ -12,27 +12,6 @@
     <artifactId>astro-server</artifactId>
     <name>Astro Server</name>
 
-    <distributionManagement>
-        <repository>
-            <id>astro-maven</id>
-            <name>Astro Maven Repository</name>
-            <url>https://colossus.kruemel.home/nexus/repository/astro/</url>
-        </repository>
-    </distributionManagement>
-
-    <repositories>
-        <repository>
-            <id>mavenCentral</id>
-            <url>https://repo1.maven.org/maven2/</url>
-        </repository>
-
-        <repository>
-            <id>astro-maven</id>
-            <name>Astro Maven Repository</name>
-            <url>https://colossus.kruemel.home/nexus/repository/astro/</url>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>ch.guengel.astro.server</groupId>
