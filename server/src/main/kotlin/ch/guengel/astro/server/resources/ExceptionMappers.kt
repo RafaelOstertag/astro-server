@@ -1,6 +1,6 @@
 package ch.guengel.astro.server.resources
 
-import ch.guengel.astro.server.model.Error
+import ch.guengel.astro.server.model.ErrorMessage
 import ch.guengel.astro.server.ngc.NoObjectsFoundError
 import ch.guengel.astro.server.ngc.ObjectNotFoundError
 import ch.guengel.astro.server.ngc.PageOutOfBoundsError
@@ -11,30 +11,28 @@ import javax.ws.rs.core.Response
 
 class ExceptionMappers {
     @ServerExceptionMapper
-    fun mapIllegalArgumentException(e: IllegalArgumentException): RestResponse<Error> =
+    fun mapIllegalArgumentException(e: IllegalArgumentException): RestResponse<ErrorMessage> =
         RestResponse.status(Response.Status.BAD_REQUEST, e.toError())
 
     @ServerExceptionMapper
-    fun mapPageOutOfBoundsError(e: PageOutOfBoundsError): RestResponse<Error> =
+    fun mapPageOutOfBoundsError(e: PageOutOfBoundsError): RestResponse<ErrorMessage> =
         RestResponse.status(Response.Status.NOT_FOUND, e.toError())
 
     @ServerExceptionMapper
-    fun mapObjectNotFoundError(e: ObjectNotFoundError): RestResponse<Error> =
+    fun mapObjectNotFoundError(e: ObjectNotFoundError): RestResponse<ErrorMessage> =
         RestResponse.status(Response.Status.NOT_FOUND, e.toError())
 
     @ServerExceptionMapper
-    fun mapNoObjectsFoundError(e: NoObjectsFoundError): RestResponse<Error> =
+    fun mapNoObjectsFoundError(e: NoObjectsFoundError): RestResponse<ErrorMessage> =
         RestResponse.status(Response.Status.NOT_FOUND, e.toError())
 
     @ServerExceptionMapper
-    fun mapException(e: Exception): RestResponse<Error> {
+    fun mapException(e: Exception): RestResponse<ErrorMessage> {
         log.error("Caught internal error", e)
         return RestResponse.status(Response.Status.INTERNAL_SERVER_ERROR, e.toError())
     }
 
-    private fun Exception.toError(): Error = Error().also { errorResponse ->
-        errorResponse.reason = message ?: "no reason specified"
-    }
+    private fun Exception.toError(): ErrorMessage = ErrorMessage().reason(message ?: "no reason specified")
 
     private companion object {
         val log: Logger = Logger.getLogger(ExceptionMappers::class.java)
