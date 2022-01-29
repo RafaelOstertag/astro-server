@@ -187,17 +187,34 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         return predicates
     }
 
-    fun getObject(objectName: String): NGCEntry {
-        val entries = catalogReference.get()?.entries ?: listOf()
-        return entries.firstOrNull { entry -> entry.name == objectName }?.let { catalogEntryMapper.map(it) }
-            ?: throw ObjectNotFoundError("Object '$objectName' not found")
-    }
+    fun getObject(objectName: String): NGCEntry = catalogReference.get()
+        ?.find { entry -> entry.name == objectName }
+        ?.firstOrNull()
+        ?.let { catalogEntryMapper.map(it) }
+        ?: throw ObjectNotFoundError("Object '$objectName' not found")
 
-    fun getLastCatalogUpdate(): CatalogLastUpdate {
-        val catalogLastUpdated =
-            catalogProvider.getLastUpdated() ?: throw CatalogNotLoadedError("Catalog not loaded yet")
-        return CatalogLastUpdate().apply { lastUpdated = catalogLastUpdated }
-    }
+    fun getObjectExtended(
+        longitude: Double,
+        latitude: Double,
+        localTime: OffsetDateTime,
+        objectName: String,
+    ): NGCEntryWithHorizontalCoordinates = catalogReference.get()
+        ?.find { entry: Entry -> entry.name == objectName }
+        ?.firstOrNull()
+        ?.let {
+            catalogReference.get()!!.extendEntries(
+                GeographicCoordinates(Angle.of(latitude), Angle.of(longitude)),
+                localTime,
+                listOf(it))
+        }
+        ?.firstOrNull()
+        ?.let { catalogEntryMapper.map(it) }
+        ?: throw ObjectNotFoundError("Object '$objectName' not found")
+
+    fun getLastCatalogUpdate(): CatalogLastUpdate = catalogProvider
+        .getLastUpdated()
+        ?.let { CatalogLastUpdate().lastUpdated(it) }
+        ?: throw CatalogNotLoadedError("Catalog not loaded yet")
 
     @Scheduled(cron = "{astro-server.catalog-fetch.cron.expression}")
     fun fetchCatalog() {

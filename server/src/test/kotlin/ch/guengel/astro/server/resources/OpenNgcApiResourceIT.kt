@@ -2,6 +2,7 @@ package ch.guengel.astro.server.resources
 
 import ch.guengel.astro.server.model.CatalogLastUpdate
 import ch.guengel.astro.server.model.NGCEntry
+import ch.guengel.astro.server.model.NGCEntryWithHorizontalCoordinates
 import ch.guengel.astro.server.model.ObjectType
 import ch.guengel.astro.server.ngc.NoObjectsFoundError
 import ch.guengel.astro.server.ngc.ObjectNotFoundError
@@ -114,7 +115,7 @@ internal class OpenNgcApiResourceIT {
         every { openNGCService.getObject(ngcEntry.name) } returns ngcEntry
 
         When {
-            get("/{objectName}", mapOf("objectName" to ngcEntry.name))
+            get("/{object-name}", mapOf("object-name" to ngcEntry.name))
         } Then {
             statusCode(200)
         }
@@ -123,17 +124,80 @@ internal class OpenNgcApiResourceIT {
     }
 
     @Test
-    fun `should handle non-existing objects`() {
+    fun `should handle non-existing object`() {
         every { openNGCService.getObject("non-existing") } throws ObjectNotFoundError("object not found")
 
         When {
-            get("/{objectName}", mapOf("objectName" to "non-existing"))
+            get("/{object-name}", mapOf("object-name" to "non-existing"))
         } Then {
             statusCode(404)
         }
 
         verify { openNGCService.getObject("non-existing") }
     }
+
+    @Test
+    fun `should get object extended`() {
+        val ngcEntryWithHorizontalCoordinates = easyRandom.nextObject(NGCEntryWithHorizontalCoordinates::class.java)
+        val now = OffsetDateTime.now()
+
+        every {
+            openNGCService.getObjectExtended(
+                8.83,
+                47.32,
+                now,
+                ngcEntryWithHorizontalCoordinates.entry.name)
+        } returns ngcEntryWithHorizontalCoordinates
+
+        When {
+            get("/{longitude}/{latitude}/{local-time}/{object-name}",
+                mapOf(
+                    "object-name" to ngcEntryWithHorizontalCoordinates.entry.name,
+                    "longitude" to "8.83",
+                    "latitude" to "47.32",
+                    "local-time" to now.toString()))
+        } Then {
+            statusCode(200)
+        }
+
+        verify {
+            openNGCService.getObjectExtended(
+                8.83,
+                47.32,
+                now,
+                ngcEntryWithHorizontalCoordinates.entry.name)
+        }
+    }
+
+    @Test
+    fun `should handle non-existing object extended`() {
+        val now = OffsetDateTime.now()
+        every {
+            openNGCService.getObjectExtended(
+                8.83,
+                47.32,
+                now, "non-existing")
+        } throws ObjectNotFoundError("object not found")
+
+        When {
+            get("/{longitude}/{latitude}/{local-time}/{object-name}",
+                mapOf(
+                    "object-name" to "non-existing",
+                    "longitude" to "8.83",
+                    "latitude" to "47.32",
+                    "local-time" to now.toString()))
+        } Then {
+            statusCode(404)
+        }
+
+        verify {
+            openNGCService.getObjectExtended(
+                8.83,
+                47.32,
+                now, "non-existing")
+        }
+    }
+
 
     @Test
     fun `should get object types`() {

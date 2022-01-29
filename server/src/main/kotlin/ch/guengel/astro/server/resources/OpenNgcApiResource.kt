@@ -22,6 +22,13 @@ class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcAp
 
     override fun getObject(objectName: String): Response = Response.ok(openNGCService.getObject(objectName)).build()
 
+    override fun getObjectExtended(
+        longitude: Double,
+        latitude: Double,
+        localTime: OffsetDateTime,
+        objectName: String,
+    ): Response = Response.ok(openNGCService.getObjectExtended(longitude, latitude, localTime, objectName)).build()
+
     override fun getTypes(): Response = Response.ok(openNGCService.objectTypes).build()
 
     override fun listObjectsExtended(

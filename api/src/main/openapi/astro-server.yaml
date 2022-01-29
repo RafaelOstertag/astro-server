@@ -5,14 +5,16 @@ info:
   contact:
     name: Rafael Ostertag
     email: rafi@guengel.ch
-  description: Astronomy REST Server
+  description: 'Expose OpenNGC Catalog. The catalog is based on [OpenNGC](https://github.com/mattiaverga/OpenNGC) on GitHub.'
 servers:
   - url: 'http://localhost:8080'
     description: Local instance
+  - url: 'https://astro.guengel.ch'
+    description: Production
 paths:
   /v1/open-ngc:
     get:
-      summary: OpenNGC Catalog
+      summary: List OpenNGC catalog objects
       tags:
         - OpenNGC
       operationId: listObjects
@@ -68,15 +70,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
-  '/v1/open-ngc/{objectName}':
+  '/v1/open-ngc/{object-name}':
     parameters:
-      - schema:
-          type: string
-        name: objectName
-        in: path
-        required: true
+      - $ref: '#/components/parameters/object-name'
     get:
-      summary: Get an Object
+      summary: Get an OpenNGC catalog object
       tags:
         - OpenNGC
       responses:
@@ -93,75 +91,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
       operationId: getObject
-      description: Get a specific object
-  /v1/open-ngc/fetch:
-    put:
-      summary: Fetch OpenNGC Catalog
-      operationId: fetchCatalog
-      responses:
-        '204':
-          description: No Content
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-      tags:
-        - OpenNGC
-      description: Fetch catalog
-    parameters: [ ]
-  /v1/open-ngc/last-update:
-    get:
-      summary: Get Catalog Last Update
-      tags:
-        - OpenNGC
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CatalogLastUpdate'
-      operationId: getLastCatalogUpdate
-      description: Returns date and time of last catalog update
-  /v1/open-ngc/types:
-    get:
-      summary: List Object Types
-      tags:
-        - OpenNGC
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ObjectType'
-      operationId: getTypes
-      description: List all object types
-  /v1/open-ngc/constellations:
-    get:
-      summary: List Constellations
-      tags:
-        - OpenNGC
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Constellation'
-      operationId: getConstellations
-      description: List all constellations
+      description: Get a specific object by object name
   '/v1/open-ngc/{longitude}/{latitude}/{local-time}':
     parameters:
       - $ref: '#/components/parameters/longitude'
       - $ref: '#/components/parameters/latitude'
       - $ref: '#/components/parameters/local-time'
     get:
-      summary: Get catalog with horizon coordinates
+      summary: List OpenNGC with horizontal coordinates
       tags:
         - OpenNGC
       parameters:
@@ -216,7 +153,97 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
       operationId: listObjectsExtended
-      description: Get catalog entries with horizon coordinates
+      description: Get catalog entries with horizontal coordinates
+  '/v1/open-ngc/{longitude}/{latitude}/{local-time}/{object-name}':
+    parameters:
+      - $ref: '#/components/parameters/longitude'
+      - $ref: '#/components/parameters/latitude'
+      - $ref: '#/components/parameters/local-time'
+      - $ref: '#/components/parameters/object-name'
+    get:
+      summary: Get catalog entry with horizontal coordinates
+      tags:
+        - OpenNGC
+      parameters: [ ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NGCEntryWithHorizontalCoordinates'
+          headers: { }
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      operationId: getObjectExtended
+      description: Get a specific object with horizontal coordinates
+  /v1/open-ngc/fetch:
+    put:
+      summary: Fetch OpenNGC Catalog
+      operationId: fetchCatalog
+      responses:
+        '204':
+          description: No Content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+      tags:
+        - OpenNGC
+      description: Fetch (update) catalog from GitHub
+      security:
+        - openid-connect: [ ]
+    parameters: [ ]
+  /v1/open-ngc/last-update:
+    get:
+      summary: Get Catalog Last Update
+      tags:
+        - OpenNGC
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogLastUpdate'
+      operationId: getLastCatalogUpdate
+      description: Returns date and time of last catalog update
+  /v1/open-ngc/types:
+    get:
+      summary: List Object Types
+      tags:
+        - OpenNGC
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObjectType'
+      operationId: getTypes
+      description: List all object types
+  /v1/open-ngc/constellations:
+    get:
+      summary: List Constellations
+      tags:
+        - OpenNGC
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Constellation'
+      operationId: getConstellations
+      description: List all constellations
 components:
   schemas:
     NGCEntry:
@@ -509,7 +536,21 @@ components:
       schema:
         type: string
         format: date-time
+        example: '2022-01-29T18:10:05.01+01:00'
       description: Local time of the observer
+    object-name:
+      name: object-name
+      in: path
+      required: true
+      schema:
+        type: string
+        example: NGC7818
+      description: 'Name of the object, start with `IC` or `NGC`'
   responses: { }
+  securitySchemes:
+    openid-connect:
+      type: openIdConnect
+      description: ''
+      openIdConnectUrl: 'https://sso.guengel.ch/auth/realms/astro/'
 tags:
   - name: OpenNGC

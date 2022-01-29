@@ -369,6 +369,29 @@ internal class OpenNGCServiceIT {
     }
 
     @Test
+    fun `should get object extended`() {
+        val localTime = OffsetDateTime.now()
+        val objectEntry = catalogEntries.random()
+        val ngcEntryWithHorizontalCoordinates =
+            openNGCService.getObjectExtended(longitude, latitude, localTime, objectEntry.name)
+        assertThat(ngcEntryWithHorizontalCoordinates.entry).isEqualTo(catalogEntryMapper.map(objectEntry))
+        assertThat(ngcEntryWithHorizontalCoordinates.horizontalCoordinates).isEqualTo(
+            catalogEntryMapper.map(objectEntry.equatorialCoordinates
+            !!.toHorizonCoordinates(GeographicCoordinates(Angle.of(latitude), Angle.of(longitude)), localTime)))
+    }
+
+    @Test
+    fun `get should throw proper exception on non-existing object extended`() {
+        assertThat {
+            openNGCService.getObjectExtended(longitude,
+                latitude,
+                OffsetDateTime.now(),
+                UUID.randomUUID().toString())
+        }.isFailure()
+            .hasClass(ObjectNotFoundError::class)
+    }
+
+    @Test
     fun `should get correct catalog update date`() {
         val date = OffsetDateTime.now()
         every { catalogProvider.getLastUpdated() } returns date
