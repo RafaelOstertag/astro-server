@@ -98,6 +98,16 @@ pipeline {
             }
         }
 
+        stage('Trigger Angular API package build') {
+            environment {
+                VERSION = sh returnStdout: true, script: "mvn -B help:evaluate '-Dexpression=project.version' | grep -v '\\[' | tr -d '\\n'"
+            }
+
+            steps {
+                build wait: false, job: '../astro-server-angular/master', parameters: [string(name: 'VERSION', value: env.VERSION)]
+            }
+        }
+
         stage('Build & Push Development Docker Image') {
             when {
                 branch 'develop'
