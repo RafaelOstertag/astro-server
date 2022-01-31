@@ -15,3 +15,9 @@ astro-server:
     catalog-url: https://raw.githubusercontent.com/mattiaverga/OpenNGC/master/NGC.csv
     cron:
       expression: "0 0 5 * * ?"
+
+"%dev":
+  quarkus:
+    http:
+      cors: true
+      origins: http://localhost:4200
