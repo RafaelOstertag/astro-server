@@ -3,8 +3,8 @@ package ch.guengel.astro.server.ngc
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import ch.guengel.astro.openngc.Constellation
-import ch.guengel.astro.openngc.Entry
-import ch.guengel.astro.openngc.ExtendedEntry
+import ch.guengel.astro.openngc.ExtendedNgcEntry
+import ch.guengel.astro.openngc.NgcEntry
 import ch.guengel.astro.openngc.ObjectType
 import ch.guengel.astro.server.easyRandomParameters
 import ch.guengel.astro.server.model.NGCEntry
@@ -17,48 +17,48 @@ internal class CatalogEntryMapperTest {
 
     @Test
     fun `should map entry`() {
-        val entry = easyRandom.nextObject(Entry::class.java)
-        val ngcEntry = catalogEntryMapper.map(entry)
+        val ngcEntry = easyRandom.nextObject(NgcEntry::class.java)
+        val ngcEntryModel = catalogEntryMapper.map(ngcEntry)
 
-        assertNgcEntry(ngcEntry, entry)
+        assertNgcEntry(ngcEntryModel, ngcEntry)
     }
 
-    private fun assertNgcEntry(ngcEntry: NGCEntry, entry: Entry) {
-        assertThat(ngcEntry.catalogName).isEqualTo(entry.catalogName.toString())
-        assertThat(ngcEntry.name).isEqualTo(entry.name)
-        assertThat(ngcEntry.type.abbrev).isEqualTo(entry.objectType.abbrev)
-        assertThat(ngcEntry.type.description).isEqualTo(entry.objectType.description)
-        assertThat(ngcEntry.equatorialCoordinates.dec).isEqualTo(entry.equatorialCoordinates!!.declination.toString())
-        assertThat(ngcEntry.equatorialCoordinates.ra).isEqualTo(entry.equatorialCoordinates!!.rightAscension.toString())
-        assertThat(ngcEntry.equatorialCoordinates.decDecimal).isEqualTo(entry.equatorialCoordinates!!.declination.asDecimal())
-        assertThat(ngcEntry.equatorialCoordinates.raDecimal).isEqualTo(entry.equatorialCoordinates!!.rightAscension.asDecimal())
-        assertThat(ngcEntry.constellation.fullname).isEqualTo(entry.constellation!!.fullname)
-        assertThat(ngcEntry.constellation.abbrev).isEqualTo(entry.constellation!!.abbrev)
-        assertThat(ngcEntry.majorAxis).isEqualTo(entry.majorAxis)
-        assertThat(ngcEntry.minorAxis).isEqualTo(entry.minorAxis)
-        assertThat(ngcEntry.getbMag()).isEqualTo(entry.bMag)
-        assertThat(ngcEntry.getvMag()).isEqualTo(entry.vMag)
-        assertThat(ngcEntry.getjMag()).isEqualTo(entry.jMag)
-        assertThat(ngcEntry.gethMag()).isEqualTo(entry.hMag)
-        assertThat(ngcEntry.getkMag()).isEqualTo(entry.kMag)
-        assertThat(ngcEntry.surfaceBrightness).isEqualTo(entry.surfBr)
-        assertThat(ngcEntry.hubble).isEqualTo(entry.hubble)
-        assertThat(ngcEntry.parallax).isEqualTo(entry.pax)
-        assertThat(ngcEntry.properMotionRA).isEqualTo(entry.pmRA)
-        assertThat(ngcEntry.properMotionDec).isEqualTo(entry.pmDec)
-        assertThat(ngcEntry.radialVelocity).isEqualTo(entry.radVel)
-        assertThat(ngcEntry.redshift).isEqualTo(entry.redshift)
-        assertThat(ngcEntry.cstarUMag).isEqualTo(entry.cstarUMag)
-        assertThat(ngcEntry.cstarUMag).isEqualTo(entry.cstarUMag)
-        assertThat(ngcEntry.cstarVMag).isEqualTo(entry.cstarVMag)
-        assertThat(ngcEntry.messier).isEqualTo(entry.messier)
-        assertThat(ngcEntry.ngc).isEqualTo(entry.ngc)
-        assertThat(ngcEntry.ic).isEqualTo(entry.ic)
-        assertThat(ngcEntry.cstarNames).isEqualTo(entry.cstarNames)
-        assertThat(ngcEntry.identifiers).isEqualTo(entry.identifiers)
-        assertThat(ngcEntry.commonNames).isEqualTo(entry.commonNames)
-        assertThat(ngcEntry.nedNotes).isEqualTo(entry.nedNotes)
-        assertThat(ngcEntry.openNGCNotes).isEqualTo(entry.openNGCNotes)
+    private fun assertNgcEntry(ngcEntryModel: NGCEntry, ngcEntry: NgcEntry) {
+        assertThat(ngcEntryModel.catalogName).isEqualTo(ngcEntry.id.catalogName.name)
+        assertThat(ngcEntryModel.name).isEqualTo(ngcEntry.name)
+        assertThat(ngcEntryModel.type.abbrev).isEqualTo(ngcEntry.objectType.abbrev)
+        assertThat(ngcEntryModel.type.description).isEqualTo(ngcEntry.objectType.description)
+        assertThat(ngcEntryModel.equatorialCoordinates.dec).isEqualTo(ngcEntry.equatorialCoordinates!!.declination.toString())
+        assertThat(ngcEntryModel.equatorialCoordinates.ra).isEqualTo(ngcEntry.equatorialCoordinates!!.rightAscension.toString())
+        assertThat(ngcEntryModel.equatorialCoordinates.decDecimal).isEqualTo(ngcEntry.equatorialCoordinates!!.declination.asDecimal())
+        assertThat(ngcEntryModel.equatorialCoordinates.raDecimal).isEqualTo(ngcEntry.equatorialCoordinates!!.rightAscension.asDecimal())
+        assertThat(ngcEntryModel.constellation.fullname).isEqualTo(ngcEntry.constellation!!.fullname)
+        assertThat(ngcEntryModel.constellation.abbrev).isEqualTo(ngcEntry.constellation!!.abbrev)
+        assertThat(ngcEntryModel.majorAxis).isEqualTo(ngcEntry.majorAxis)
+        assertThat(ngcEntryModel.minorAxis).isEqualTo(ngcEntry.minorAxis)
+        assertThat(ngcEntryModel.getbMag()).isEqualTo(ngcEntry.bMag)
+        assertThat(ngcEntryModel.getvMag()).isEqualTo(ngcEntry.vMag)
+        assertThat(ngcEntryModel.getjMag()).isEqualTo(ngcEntry.jMag)
+        assertThat(ngcEntryModel.gethMag()).isEqualTo(ngcEntry.hMag)
+        assertThat(ngcEntryModel.getkMag()).isEqualTo(ngcEntry.kMag)
+        assertThat(ngcEntryModel.surfaceBrightness).isEqualTo(ngcEntry.surfBr)
+        assertThat(ngcEntryModel.hubble).isEqualTo(ngcEntry.hubble)
+        assertThat(ngcEntryModel.parallax).isEqualTo(ngcEntry.pax)
+        assertThat(ngcEntryModel.properMotionRA).isEqualTo(ngcEntry.pmRA)
+        assertThat(ngcEntryModel.properMotionDec).isEqualTo(ngcEntry.pmDec)
+        assertThat(ngcEntryModel.radialVelocity).isEqualTo(ngcEntry.radVel)
+        assertThat(ngcEntryModel.redshift).isEqualTo(ngcEntry.redshift)
+        assertThat(ngcEntryModel.cstarUMag).isEqualTo(ngcEntry.cstarUMag)
+        assertThat(ngcEntryModel.cstarUMag).isEqualTo(ngcEntry.cstarUMag)
+        assertThat(ngcEntryModel.cstarVMag).isEqualTo(ngcEntry.cstarVMag)
+        assertThat(ngcEntryModel.messier).isEqualTo(ngcEntry.messier)
+        assertThat(ngcEntryModel.ngc).isEqualTo(ngcEntry.ngc)
+        assertThat(ngcEntryModel.ic).isEqualTo(ngcEntry.ic)
+        assertThat(ngcEntryModel.cstarNames).isEqualTo(ngcEntry.cstarNames)
+        assertThat(ngcEntryModel.identifiers).isEqualTo(ngcEntry.identifiers)
+        assertThat(ngcEntryModel.commonNames).isEqualTo(ngcEntry.commonNames)
+        assertThat(ngcEntryModel.nedNotes).isEqualTo(ngcEntry.nedNotes)
+        assertThat(ngcEntryModel.openNGCNotes).isEqualTo(ngcEntry.openNGCNotes)
     }
 
     @Test
@@ -81,14 +81,14 @@ internal class CatalogEntryMapperTest {
 
     @Test
     fun `should map entry with horizontal coordinates`() {
-        val extendedEntry = easyRandom.nextObject(ExtendedEntry::class.java)
-        val ngcEntryWithHorizonCoordinates = catalogEntryMapper.map(extendedEntry)
+        val extendedNgcEntry = easyRandom.nextObject(ExtendedNgcEntry::class.java)
+        val ngcEntryWithHorizonCoordinates = catalogEntryMapper.map(extendedNgcEntry)
 
-        assertNgcEntry(ngcEntryWithHorizonCoordinates.entry, extendedEntry.entry)
-        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.alt).isEqualTo(extendedEntry.horizontalCoordinates.altitude.toString())
-        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.altDec).isEqualTo(extendedEntry.horizontalCoordinates.altitude.asDecimal())
+        assertNgcEntry(ngcEntryWithHorizonCoordinates.entry, extendedNgcEntry.ngcEntry)
+        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.alt).isEqualTo(extendedNgcEntry.horizontalCoordinates.altitude.toString())
+        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.altDec).isEqualTo(extendedNgcEntry.horizontalCoordinates.altitude.asDecimal())
 
-        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.az).isEqualTo(extendedEntry.horizontalCoordinates.azimuth.toString())
-        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.azDec).isEqualTo(extendedEntry.horizontalCoordinates.azimuth.asDecimal())
+        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.az).isEqualTo(extendedNgcEntry.horizontalCoordinates.azimuth.toString())
+        assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates.azDec).isEqualTo(extendedNgcEntry.horizontalCoordinates.azimuth.asDecimal())
     }
 }

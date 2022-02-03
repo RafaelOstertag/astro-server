@@ -12,10 +12,10 @@ import assertk.assertions.isSuccess
 import assertk.assertions.isTrue
 import ch.guengel.astro.coordinates.Angle
 import ch.guengel.astro.coordinates.GeographicCoordinates
-import ch.guengel.astro.coordinates.toHorizonCoordinates
+import ch.guengel.astro.coordinates.toHorizontalCoordinates
 import ch.guengel.astro.openngc.Catalog
 import ch.guengel.astro.openngc.Constellation
-import ch.guengel.astro.openngc.Entry
+import ch.guengel.astro.openngc.NgcEntry
 import ch.guengel.astro.openngc.ObjectType
 import ch.guengel.astro.server.easyRandomParameters
 import ch.guengel.astro.server.model.CatalogLastUpdate
@@ -42,7 +42,7 @@ internal class OpenNGCServiceIT {
     private val numberOfCatalogEntries = 100
     private var easyRandom = EasyRandom(easyRandomParameters)
 
-    private lateinit var catalogEntries: List<Entry>
+    private lateinit var catalogEntries: List<NgcEntry>
 
     @InjectMock
     lateinit var catalogProvider: CatalogProvider
@@ -55,7 +55,7 @@ internal class OpenNGCServiceIT {
 
     @BeforeEach
     fun beforeEach() {
-        catalogEntries = easyRandom.objects(Entry::class.java, numberOfCatalogEntries).toList()
+        catalogEntries = easyRandom.objects(NgcEntry::class.java, numberOfCatalogEntries).toList()
         every { catalogProvider.loadCatalog() } returns Catalog(catalogEntries)
         openNGCService.postConstruct()
     }
@@ -143,7 +143,7 @@ internal class OpenNGCServiceIT {
         val result = openNGCService.list(0,
             numberOfCatalogEntries,
             messier = needle.isMessier(),
-            catalog = needle.catalogName.name,
+            catalog = needle.id.catalogName.name,
             objects = setOf(needle.name),
             constellations = setOf(needle.constellation!!.fullname)
         )
@@ -168,7 +168,7 @@ internal class OpenNGCServiceIT {
         var result = openNGCService.list(0,
             numberOfCatalogEntries,
             messier = needle.isMessier(),
-            catalog = needle.catalogName.name,
+            catalog = needle.id.catalogName.name,
             objects = setOf(needle.name),
             constellations = setOf(needle.constellation!!.fullname, UUID.randomUUID().toString())
         )
@@ -178,7 +178,7 @@ internal class OpenNGCServiceIT {
         result = openNGCService.list(0,
             numberOfCatalogEntries,
             messier = needle.isMessier(),
-            catalog = needle.catalogName.name,
+            catalog = needle.id.catalogName.name,
             objects = setOf(needle.name),
             constellations = setOf(needle.constellation!!.abbrev, UUID.randomUUID().toString())
         )
@@ -188,7 +188,7 @@ internal class OpenNGCServiceIT {
         result = openNGCService.list(0,
             numberOfCatalogEntries,
             messier = needle.isMessier(),
-            catalog = needle.catalogName.name,
+            catalog = needle.id.catalogName.name,
             objects = setOf(needle.name),
             constellations = setOf(
                 needle.constellation!!.abbrev,
@@ -292,7 +292,7 @@ internal class OpenNGCServiceIT {
         val result = OpenNGCService.ListExtendedArguments(longitude, latitude, localTime, 0,
             numberOfCatalogEntries,
             messier = needle.isMessier(),
-            catalog = needle.catalogName.name,
+            catalog = needle.id.catalogName.name,
             objects = setOf(needle.name),
             constellations = setOf(needle.constellation!!.fullname)).let {
             openNGCService.listExtended(it)
@@ -323,7 +323,7 @@ internal class OpenNGCServiceIT {
             0,
             numberOfCatalogEntries,
             messier = needle.isMessier(),
-            catalog = needle.catalogName.name,
+            catalog = needle.id.catalogName.name,
             objects = setOf(needle.name),
             constellations = setOf(needle.constellation!!.fullname, UUID.randomUUID().toString()))
             .let { openNGCService.listExtended(it) }
@@ -336,7 +336,7 @@ internal class OpenNGCServiceIT {
             0,
             numberOfCatalogEntries,
             messier = needle.isMessier(),
-            catalog = needle.catalogName.name,
+            catalog = needle.id.catalogName.name,
             objects = setOf(needle.name),
             constellations = setOf(needle.constellation!!.abbrev, UUID.randomUUID().toString()))
             .let { openNGCService.listExtended(it) }
@@ -349,7 +349,7 @@ internal class OpenNGCServiceIT {
             0,
             numberOfCatalogEntries,
             messier = needle.isMessier(),
-            catalog = needle.catalogName.name,
+            catalog = needle.id.catalogName.name,
             objects = setOf(needle.name),
             constellations = setOf(
                 needle.constellation!!.abbrev,
@@ -361,12 +361,12 @@ internal class OpenNGCServiceIT {
 
     private fun assertNgcEntryWithHorzonCoordinates(
         ngcEntryWithHorizonCoordinates: NGCEntryWithHorizontalCoordinates,
-        entry: Entry,
+        ngcEntry: NgcEntry,
         localTime: OffsetDateTime,
     ) {
-        assertThat(ngcEntryWithHorizonCoordinates.entry).isEqualTo(catalogEntryMapper.map(entry))
+        assertThat(ngcEntryWithHorizonCoordinates.entry).isEqualTo(catalogEntryMapper.map(ngcEntry))
         assertThat(ngcEntryWithHorizonCoordinates.horizontalCoordinates)
-            .isEqualTo(catalogEntryMapper.map(entry.equatorialCoordinates!!.toHorizonCoordinates(
+            .isEqualTo(catalogEntryMapper.map(ngcEntry.equatorialCoordinates!!.toHorizontalCoordinates(
                 GeographicCoordinates(Angle.of(latitude), Angle.of(longitude)), localTime)))
     }
 
@@ -392,7 +392,7 @@ internal class OpenNGCServiceIT {
         assertThat(ngcEntryWithHorizontalCoordinates.entry).isEqualTo(catalogEntryMapper.map(objectEntry))
         assertThat(ngcEntryWithHorizontalCoordinates.horizontalCoordinates).isEqualTo(
             catalogEntryMapper.map(objectEntry.equatorialCoordinates
-            !!.toHorizonCoordinates(GeographicCoordinates(Angle.of(latitude), Angle.of(longitude)), localTime)))
+            !!.toHorizontalCoordinates(GeographicCoordinates(Angle.of(latitude), Angle.of(longitude)), localTime)))
     }
 
     @Test
@@ -429,7 +429,7 @@ internal class OpenNGCServiceIT {
 
     @Test
     fun `fetch catalog should call catalog provider`() {
-        val newEntry = easyRandom.nextObject(Entry::class.java)
+        val newEntry = easyRandom.nextObject(NgcEntry::class.java)
         every { catalogProvider.fetchCatalog() } returns Catalog(listOf(newEntry))
 
         openNGCService.fetchCatalog()

@@ -3,8 +3,8 @@ package ch.guengel.astro.server.ngc
 import ch.guengel.astro.coordinates.Angle
 import ch.guengel.astro.coordinates.GeographicCoordinates
 import ch.guengel.astro.openngc.Catalog
-import ch.guengel.astro.openngc.Entry
-import ch.guengel.astro.openngc.ExtendedEntry
+import ch.guengel.astro.openngc.ExtendedNgcEntry
+import ch.guengel.astro.openngc.NgcEntry
 import ch.guengel.astro.server.model.CatalogLastUpdate
 import ch.guengel.astro.server.model.Constellation
 import ch.guengel.astro.server.model.NGCEntry
@@ -18,7 +18,7 @@ import javax.annotation.PostConstruct
 import javax.enterprise.context.ApplicationScoped
 import kotlin.math.ceil
 
-private typealias EntryFilter = (Entry) -> Boolean
+private typealias EntryFilter = (NgcEntry) -> Boolean
 
 @ApplicationScoped
 class OpenNGCService(private val catalogProvider: CatalogProvider, private val catalogEntryMapper: CatalogEntryMapper) {
@@ -68,9 +68,9 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         val entryPredicates = compileEntryPredicates(messier, catalog, objects, constellations)
 
         val allEntries =
-            if (entryPredicates.isEmpty()) openNgcCatalog.find { true } else openNgcCatalog.find { entry: Entry ->
+            if (entryPredicates.isEmpty()) openNgcCatalog.find { true } else openNgcCatalog.find { ngcEntry: NgcEntry ->
                 entryPredicates
-                    .map { predicate -> predicate(entry) }
+                    .map { predicate -> predicate(ngcEntry) }
                     .reduce { acc, b -> acc && b }
             }
 
@@ -116,9 +116,9 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         val allEntries =
             if (entryPredicates.isEmpty()) openNgcCatalog.findExtendedEntries(geographicCoordinates,
                 arguments.localTime) { true } else openNgcCatalog.findExtendedEntries(geographicCoordinates,
-                arguments.localTime) { extendedEntry: ExtendedEntry ->
+                arguments.localTime) { extendedNgcEntry: ExtendedNgcEntry ->
                 entryPredicates
-                    .map { predicate -> predicate(extendedEntry.entry) }
+                    .map { predicate -> predicate(extendedNgcEntry.ngcEntry) }
                     .reduce { acc, b -> acc && b }
             }
 
@@ -172,7 +172,7 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         }
 
         if (catalog != null) {
-            predicates.add { entry -> entry.catalogName.toString() == catalog }
+            predicates.add { entry -> entry.id.catalogName.name == catalog }
         }
 
         if (objects != null && objects.isNotEmpty()) {
@@ -202,7 +202,7 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         localTime: OffsetDateTime,
         objectName: String,
     ): NGCEntryWithHorizontalCoordinates = catalogReference.get()
-        ?.find { entry: Entry -> entry.name == objectName }
+        ?.find { ngcEntry: NgcEntry -> ngcEntry.name == objectName }
         ?.firstOrNull()
         ?.let {
             catalogReference.get()!!.extendEntries(

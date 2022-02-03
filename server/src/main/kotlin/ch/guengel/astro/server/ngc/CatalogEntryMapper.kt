@@ -1,7 +1,7 @@
 package ch.guengel.astro.server.ngc
 
-import ch.guengel.astro.openngc.Entry
-import ch.guengel.astro.openngc.ExtendedEntry
+import ch.guengel.astro.openngc.ExtendedNgcEntry
+import ch.guengel.astro.openngc.NgcEntry
 import ch.guengel.astro.server.model.Constellation
 import ch.guengel.astro.server.model.EquatorialCoordinates
 import ch.guengel.astro.server.model.HorizontalCoordinates
@@ -12,55 +12,55 @@ import javax.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
 class CatalogEntryMapper {
-    fun map(entry: Entry): NGCEntry = ngcEntry {
-        catalogName = entry.catalogName.toString()
-        name = entry.name
-        type = map(entry.objectType)
+    fun map(ngcEntry: NgcEntry): NGCEntry = ngcEntry {
+        catalogName = ngcEntry.id.catalogName.name
+        name = ngcEntry.name
+        type = map(ngcEntry.objectType)
 
-        if (entry.equatorialCoordinates != null) {
+        if (ngcEntry.equatorialCoordinates != null) {
             equatorialCoordinates = equatorialCoordinates {
-                ra = entry.equatorialCoordinates!!.rightAscension.toString()
-                dec = entry.equatorialCoordinates!!.declination.toString()
-                raDecimal = entry.equatorialCoordinates!!.rightAscension.asDecimal()
-                decDecimal = entry.equatorialCoordinates!!.declination.asDecimal()
+                ra = ngcEntry.equatorialCoordinates!!.rightAscension.toString()
+                dec = ngcEntry.equatorialCoordinates!!.declination.toString()
+                raDecimal = ngcEntry.equatorialCoordinates!!.rightAscension.asDecimal()
+                decDecimal = ngcEntry.equatorialCoordinates!!.declination.asDecimal()
             }
         }
 
-        if (entry.constellation != null) {
-            constellation = map(entry.constellation!!)
+        if (ngcEntry.constellation != null) {
+            constellation = map(ngcEntry.constellation!!)
         }
 
-        majorAxis = entry.majorAxis
-        minorAxis = entry.minorAxis
-        positionAngle = entry.positionAngle
-        setbMag(entry.bMag)
-        setvMag(entry.vMag)
-        setjMag(entry.jMag)
-        sethMag(entry.hMag)
-        setkMag(entry.kMag)
-        surfaceBrightness = entry.surfBr
-        hubble = entry.hubble
-        parallax = entry.pax
-        properMotionRA = entry.pmRA
-        properMotionDec = entry.pmDec
-        radialVelocity = entry.radVel
-        redshift = entry.redshift
-        cstarUMag = entry.cstarUMag
-        cstarBMag = entry.cstarBMag
-        cstarVMag = entry.cstarVMag
-        messier = entry.messier
-        ngc = entry.ngc
-        ic = entry.ic
-        cstarNames = entry.cstarNames
-        identifiers = entry.identifiers
-        commonNames = entry.commonNames
-        nedNotes = entry.nedNotes
-        openNGCNotes = entry.openNGCNotes
+        majorAxis = ngcEntry.majorAxis
+        minorAxis = ngcEntry.minorAxis
+        positionAngle = ngcEntry.positionAngle
+        setbMag(ngcEntry.bMag)
+        setvMag(ngcEntry.vMag)
+        setjMag(ngcEntry.jMag)
+        sethMag(ngcEntry.hMag)
+        setkMag(ngcEntry.kMag)
+        surfaceBrightness = ngcEntry.surfBr
+        hubble = ngcEntry.hubble
+        parallax = ngcEntry.pax
+        properMotionRA = ngcEntry.pmRA
+        properMotionDec = ngcEntry.pmDec
+        radialVelocity = ngcEntry.radVel
+        redshift = ngcEntry.redshift
+        cstarUMag = ngcEntry.cstarUMag
+        cstarBMag = ngcEntry.cstarBMag
+        cstarVMag = ngcEntry.cstarVMag
+        messier = ngcEntry.messier
+        ngc = ngcEntry.ngc
+        ic = ngcEntry.ic
+        cstarNames = ngcEntry.cstarNames
+        identifiers = ngcEntry.identifiers
+        commonNames = ngcEntry.commonNames
+        nedNotes = ngcEntry.nedNotes
+        openNGCNotes = ngcEntry.openNGCNotes
     }
 
-    fun map(extendedEntry: ExtendedEntry): NGCEntryWithHorizontalCoordinates = ngcEntryWithHorizontalCoordinates {
-        entry = map(extendedEntry.entry)
-        horizontalCoordinates = map(extendedEntry.horizontalCoordinates)
+    fun map(extendedNgcEntry: ExtendedNgcEntry): NGCEntryWithHorizontalCoordinates = ngcEntryWithHorizontalCoordinates {
+        entry = map(extendedNgcEntry.ngcEntry)
+        horizontalCoordinates = map(extendedNgcEntry.horizontalCoordinates)
     }
 
     fun map(horizontalCoordinates: ch.guengel.astro.coordinates.HorizontalCoordinates) = horizontalCoordinates {
