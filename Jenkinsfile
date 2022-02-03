@@ -36,6 +36,12 @@ pipeline {
         }
 
         stage("Sonarcloud") {
+            when {
+                not {
+                    triggeredBy 'TimerTrigger'
+                }
+            }
+
             steps {
                 configFileProvider([configFile(fileId: '4f3d0128-0fdd-4de7-8536-5cbdd54a8baf', variable: 'MAVEN_SETTINGS_XML')]) {
                     withSonarQubeEnv(installationName: 'Sonarcloud', credentialsId: 'e8795d01-550a-4c05-a4be-41b48b22403f') {
@@ -46,6 +52,12 @@ pipeline {
         }
 
         stage("Quality Gate") {
+            when {
+                not {
+                    triggeredBy 'TimerTrigger'
+                }
+            }
+
             steps {
                 timeout(time: 30, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
@@ -99,6 +111,12 @@ pipeline {
         }
 
         stage('Trigger Angular API package build') {
+            when {
+                not {
+                    triggeredBy 'TimerTrigger'
+                }
+            }
+            
             environment {
                 VERSION = sh returnStdout: true, script: "mvn -B help:evaluate '-Dexpression=project.version' | grep -v '\\[' | tr -d '\\n'"
             }
