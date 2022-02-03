@@ -19,5 +19,7 @@ astro-server:
 "%dev":
   quarkus:
     http:
-      cors: true
-      origins: http://localhost:4200
+      cors:
+        ~: true
+        origins: http://localhost:4200
+        exposed-headers: x-first-page,x-last-page,x-next-page-index,x-page-index,x-page-size,x-total-pages
