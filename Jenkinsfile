@@ -116,7 +116,7 @@ pipeline {
                     triggeredBy 'TimerTrigger'
                 }
             }
-            
+
             environment {
                 VERSION = sh returnStdout: true, script: "mvn -B help:evaluate '-Dexpression=project.version' | grep -v '\\[' | tr -d '\\n'"
             }
@@ -224,22 +224,22 @@ pipeline {
             }
         }
 
-//        stage('Trigger k8s deployment') {
-//            environment {
-//                VERSION = sh returnStdout: true, script: "mvn -B help:evaluate '-Dexpression=project.version' | grep -v '\\[' | tr -d '\\n'"
-//            }
-//
-//            when {
-//                branch 'master'
-//                not {
-//                    triggeredBy "TimerTrigger"
-//                }
-//            }
-//
-//            steps {
-//                build wait: false, job: '../Helm/astro-server', parameters: [string(name: 'VERSION', value: env.VERSION)]
-//            }
-//        }
+        stage('Trigger k8s deployment') {
+            environment {
+                VERSION = sh returnStdout: true, script: "mvn -B help:evaluate '-Dexpression=project.version' | grep -v '\\[' | tr -d '\\n'"
+            }
+
+            when {
+                branch 'master'
+                not {
+                    triggeredBy "TimerTrigger"
+                }
+            }
+
+            steps {
+                build wait: false, job: '../astro-server-helm/master', parameters: [string(name: 'VERSION', value: env.VERSION)]
+            }
+        }
     }
 
     post {
