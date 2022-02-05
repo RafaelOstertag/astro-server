@@ -1,0 +1,25 @@
+quarkus:
+  http:
+    access-log:
+      enabled: true
+  oidc:
+    auth-server-url: https://sso.guengel.ch/auth/realms/astro
+    client-id: astro-server-service
+    enabled: true
+    discovery-enabled: true
+
+astro-server:
+  catalog-file-path: /tmp/astro-server/NGC.csv
+
+  catalog-fetch:
+    catalog-url: https://raw.githubusercontent.com/mattiaverga/OpenNGC/master/NGC.csv
+    cron:
+      expression: "0 0 5 * * ?"
+
+"%dev":
+  quarkus:
+    http:
+      cors:
+        ~: true
+        origins: http://localhost:4200
+        exposed-headers: x-first-page,x-last-page,x-next-page-index,x-page-index,x-page-size,x-total-pages
