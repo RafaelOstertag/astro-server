@@ -18,8 +18,6 @@ import javax.annotation.PostConstruct
 import javax.enterprise.context.ApplicationScoped
 import kotlin.math.ceil
 
-private typealias EntryFilter = (NgcEntry) -> Boolean
-private typealias ExtendedEntryFilter = (ExtendedNgcEntry) -> Boolean
 
 @ApplicationScoped
 class OpenNGCService(private val catalogProvider: CatalogProvider, private val catalogEntryMapper: CatalogEntryMapper) {
@@ -63,7 +61,7 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         }
 
         val entryPredicates =
-            compileEntryPredicates(arguments)
+            EntryFilters.compileEntryPredicates(arguments)
 
         val allEntries =
             if (entryPredicates.isEmpty()) openNgcCatalog.find { true } else openNgcCatalog.find { ngcEntry: NgcEntry ->
@@ -94,10 +92,9 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
             return emptyPagedList(arguments.listArguments)
         }
 
-        val entryPredicates =
-            compileEntryPredicates(arguments.listArguments)
+        val entryPredicates = EntryFilters.compileEntryPredicates(arguments.listArguments)
 
-        val extendedEntryPredicates = compileAltitudePredicates(arguments)
+        val extendedEntryPredicates = EntryFilters.compileExtendedEntryPredicates(arguments)
 
         val geographicCoordinates = GeographicCoordinates(Angle.of(arguments.latitude), Angle.of(arguments.longitude))
 
@@ -110,7 +107,7 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
                     .map { predicate -> predicate(extendedNgcEntry.ngcEntry) }
                     .reduce { acc, b -> acc && b }
             }
-        } else if (entryPredicates.isEmpty() && extendedEntryPredicates.isNotEmpty()) {
+        } else if (entryPredicates.isEmpty()) {
             openNgcCatalog.findExtendedEntries(geographicCoordinates,
                 arguments.localTime) { extendedNgcEntry: ExtendedNgcEntry ->
                 extendedEntryPredicates
@@ -136,19 +133,6 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
             catalogEntryMapper::map)
     }
 
-    private fun compileAltitudePredicates(arguments: ListExtendedArguments): List<ExtendedEntryFilter> {
-        val predicates = mutableListOf<ExtendedEntryFilter>()
-
-        if (arguments.altitudeMax != null) {
-            predicates.add { extendedEntry -> extendedEntry.horizontalCoordinates.altitude.asDecimal() <= arguments.altitudeMax }
-        }
-
-        if (arguments.altitudeMin != null) {
-            predicates.add { extendedEntry -> extendedEntry.horizontalCoordinates.altitude.asDecimal() >= arguments.altitudeMin }
-        }
-
-        return predicates
-    }
 
     private fun <T> emptyPagedList(arguments: ListArguments): PagedList<T> =
         PagedList(
@@ -197,43 +181,6 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
             previousPageIndex = if (!isFirstPage) pageIndex - 1 else null,
             firstPage = isFirstPage,
             lastPage = isLastPage)
-    }
-
-    private fun compileEntryPredicates(listArguments: ListArguments): List<EntryFilter> = with(listArguments) {
-        val predicates = mutableListOf<EntryFilter>()
-        if (messier != null) {
-            predicates.add { entry -> entry.isMessier() == messier }
-        }
-
-        if (catalog != null) {
-            predicates.add { entry -> entry.id.catalogName.name == catalog }
-        }
-
-        if ((objects != null) && objects.isNotEmpty()) {
-            predicates.add { entry -> objects.contains(entry.name) }
-        }
-
-        if ((constellations != null) && constellations.isNotEmpty()) {
-            predicates.add { entry ->
-                (entry.constellation != null) &&
-                        (constellations.contains(entry.constellation!!.abbrev) ||
-                                constellations.contains(entry.constellation!!.fullname))
-            }
-        }
-
-        if (vMagnitudeMax != null) {
-            predicates.add { entry -> entry.vMag != null && entry.vMag!! >= vMagnitudeMax }
-        }
-
-        if (vMagnitudeMin != null) {
-            predicates.add { entry -> entry.vMag != null && entry.vMag!! <= vMagnitudeMin }
-        }
-
-        if (types != null && types.isNotEmpty()) {
-            predicates.add { entry -> types.contains(entry.objectType.abbrev) }
-        }
-
-        return predicates
     }
 
     fun getObject(objectName: String): NGCEntry = catalogReference.get()
