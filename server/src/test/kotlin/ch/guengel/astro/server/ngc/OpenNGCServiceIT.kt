@@ -309,6 +309,9 @@ internal class OpenNGCServiceIT {
         val needle = catalogEntries.random()
 
         val localTime = OffsetDateTime.now()
+        val horizontalCoordinates =
+            needle.equatorialCoordinates!!.toHorizontalCoordinates(GeographicCoordinates(Angle.of(latitude), Angle.of(
+                longitude)), OffsetDateTime.now())
         val result = OpenNGCService.ListExtendedArguments(
             OpenNGCService.ListArguments(0,
                 numberOfCatalogEntries,
@@ -320,7 +323,34 @@ internal class OpenNGCServiceIT {
             ),
             longitude = longitude,
             latitude = latitude,
-            localTime = localTime
+            localTime = localTime,
+            altitudeMin = horizontalCoordinates.altitude.asDecimal() - 0.1,
+            altitudeMax = horizontalCoordinates.altitude.asDecimal() + 0.1
+        ).let {
+            openNGCService.listExtended(it)
+        }
+        assertThat(result.entryList).hasSize(1)
+        val ngcEntryWithHorizonCoordinates = result.entryList.first()
+        assertNgcEntryWithHorzonCoordinates(ngcEntryWithHorizonCoordinates, needle, localTime)
+    }
+
+    @Test
+    fun `list extended should filter extended information only`() {
+        val needle = catalogEntries.random()
+
+        val localTime = OffsetDateTime.now()
+        val horizontalCoordinates =
+            needle.equatorialCoordinates!!.toHorizontalCoordinates(GeographicCoordinates(Angle.of(latitude), Angle.of(
+                longitude)), OffsetDateTime.now())
+        val result = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(0,
+                numberOfCatalogEntries
+            ),
+            longitude = longitude,
+            latitude = latitude,
+            localTime = localTime,
+            altitudeMin = horizontalCoordinates.altitude.asDecimal() - 0.1,
+            altitudeMax = horizontalCoordinates.altitude.asDecimal() + 0.1
         ).let {
             openNGCService.listExtended(it)
         }
