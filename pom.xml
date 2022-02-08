@@ -6,7 +6,7 @@
     <groupId>ch.guengel.astro.server</groupId>
     <artifactId>astro-server-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.1.0</version>
+    <version>1.1.1-SNAPSHOT</version>
 
     <name>Astro Server Parent</name>
 
