@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Astro Server
-  version: '1.0'
+  version: '1.1'
   contact:
     name: Rafael Ostertag
     email: rafi@guengel.ch
@@ -26,6 +26,9 @@ paths:
         - $ref: '#/components/parameters/catalog'
         - $ref: '#/components/parameters/objects'
         - $ref: '#/components/parameters/constellations'
+        - $ref: '#/components/parameters/v-mag-max'
+        - $ref: '#/components/parameters/v-mag-min'
+        - $ref: '#/components/parameters/types'
       responses:
         '200':
           description: OK
@@ -64,6 +67,10 @@ paths:
               schema:
                 type: integer
               description: Number of pages with this page size
+            x-total-entries:
+              schema:
+                type: integer
+              description: Total number of entries
         '404':
           description: Not Found
           content:
@@ -108,6 +115,11 @@ paths:
         - $ref: '#/components/parameters/catalog'
         - $ref: '#/components/parameters/objects'
         - $ref: '#/components/parameters/constellations'
+        - $ref: '#/components/parameters/v-mag-max'
+        - $ref: '#/components/parameters/v-mag-min'
+        - $ref: '#/components/parameters/alt-max'
+        - $ref: '#/components/parameters/alt-min'
+        - $ref: '#/components/parameters/types'
       responses:
         '200':
           description: OK
@@ -146,6 +158,10 @@ paths:
               schema:
                 type: integer
               description: Number of pages with this page size
+            x-total-entries:
+              schema:
+                type: integer
+              description: Total number of entries
         '404':
           description: Not Found
           content:
@@ -498,6 +514,7 @@ components:
         items:
           type: string
         uniqueItems: true
+        example: NGC1701
       description: Only list these objects
       style: form
     constellations:
@@ -546,6 +563,45 @@ components:
         type: string
         example: NGC7818
       description: 'Name of the object, start with `IC` or `NGC`'
+    v-mag-max:
+      name: v-mag-max
+      in: query
+      required: false
+      schema:
+        type: number
+      description: Maximum v-Magnitude
+    v-mag-min:
+      name: v-mag-min
+      in: query
+      required: false
+      schema:
+        type: number
+      description: Minmum v-Magnitude
+    alt-min:
+      name: alt-min
+      in: query
+      required: false
+      schema:
+        type: number
+      description: Minimum altitude in decimal degrees
+    alt-max:
+      name: alt-max
+      in: query
+      required: false
+      schema:
+        type: number
+      description: Maximum altitude in decimal degrees
+    types:
+      name: types
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+        uniqueItems: true
+        example: '**'
+      description: List only these types. Use the abbreviation as received from `v1/open-ngc/types` endpoint.
+      style: form
   responses: { }
   securitySchemes:
     openid-connect:
