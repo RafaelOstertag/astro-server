@@ -72,7 +72,7 @@ internal class OpenNGCServiceIT {
 
     @Test
     fun `list pages correctly first page`() {
-        var result = openNGCService.list(0, 1)
+        var result = openNGCService.list(OpenNGCService.ListArguments(0, 1))
         assertThat(result.entryList).hasSize(1)
         assertThat(result.firstPage).isTrue()
         assertThat(result.lastPage).isFalse()
@@ -82,7 +82,7 @@ internal class OpenNGCServiceIT {
         assertThat(result.nextPageIndex).isNotNull().isEqualTo(1)
         assertThat(result.previousPageIndex).isNull()
 
-        result = openNGCService.list(0, 24)
+        result = openNGCService.list(OpenNGCService.ListArguments(0, 24))
         assertThat(result.entryList).hasSize(24)
         assertThat(result.firstPage).isTrue()
         assertThat(result.lastPage).isFalse()
@@ -92,7 +92,7 @@ internal class OpenNGCServiceIT {
         assertThat(result.nextPageIndex).isNotNull().isEqualTo(1)
         assertThat(result.previousPageIndex).isNull()
 
-        result = openNGCService.list(0, numberOfCatalogEntries)
+        result = openNGCService.list(OpenNGCService.ListArguments(0, numberOfCatalogEntries))
         assertThat(result.entryList).hasSize(numberOfCatalogEntries)
         assertThat(result.firstPage).isTrue()
         assertThat(result.lastPage).isTrue()
@@ -102,7 +102,7 @@ internal class OpenNGCServiceIT {
         assertThat(result.nextPageIndex).isNull()
         assertThat(result.previousPageIndex).isNull()
 
-        result = openNGCService.list(0, numberOfCatalogEntries + 1)
+        result = openNGCService.list(OpenNGCService.ListArguments(0, numberOfCatalogEntries + 1))
         assertThat(result.entryList).hasSize(numberOfCatalogEntries)
         assertThat(result.firstPage).isTrue()
         assertThat(result.lastPage).isTrue()
@@ -115,7 +115,7 @@ internal class OpenNGCServiceIT {
 
     @Test
     fun `list pages correctly last page`() {
-        val result = openNGCService.list(4, 24)
+        val result = openNGCService.list(OpenNGCService.ListArguments(4, 24))
         assertThat(result.entryList).hasSize(4)
         assertThat(result.firstPage).isFalse()
         assertThat(result.lastPage).isTrue()
@@ -128,11 +128,11 @@ internal class OpenNGCServiceIT {
 
     @Test
     fun `list should correctly handle invalid page input`() {
-        assertThat { openNGCService.list(-1, 25) }
+        assertThat { openNGCService.list(OpenNGCService.ListArguments(-1, 25)) }
             .isFailure().hasClass(IllegalArgumentException::class)
-        assertThat { openNGCService.list(0, 0) }
+        assertThat { openNGCService.list(OpenNGCService.ListArguments(0, 0)) }
             .isFailure().hasClass(IllegalArgumentException::class)
-        assertThat { openNGCService.list(4, 25) }
+        assertThat { openNGCService.list(OpenNGCService.ListArguments(4, 25)) }
             .isFailure().hasClass(PageOutOfBoundsError::class)
     }
 
@@ -140,13 +140,17 @@ internal class OpenNGCServiceIT {
     fun `list should correctly filter list`() {
         val needle = catalogEntries.random()
 
-        val result = openNGCService.list(0,
-            numberOfCatalogEntries,
-            messier = needle.isMessier(),
-            catalog = needle.id.catalogName.name,
-            objects = setOf(needle.name),
-            constellations = setOf(needle.constellation!!.fullname)
-        )
+        val result = openNGCService.list(
+            OpenNGCService.ListArguments(0,
+                numberOfCatalogEntries,
+                messier = needle.isMessier(),
+                catalog = needle.id.catalogName.name,
+                objects = setOf(needle.name),
+                constellations = setOf(needle.constellation!!.fullname),
+                vMagnitudeMax = needle.vMag!! - 0.1,
+                vMagnitudeMin = needle.vMag!! + 0.1,
+                types = setOf(needle.objectType.abbrev)
+            ))
         assertThat(result.entryList).hasSize(1)
         assertThat(result.entryList.first()).isEqualTo(catalogEntryMapper.map(needle))
     }
@@ -154,9 +158,10 @@ internal class OpenNGCServiceIT {
     @Test
     fun `list should throw correct exception when no objects are found`() {
         assertThat {
-            openNGCService.list(0,
-                numberOfCatalogEntries,
-                objects = setOf(UUID.randomUUID().toString())
+            openNGCService.list(
+                OpenNGCService.ListArguments(0,
+                    numberOfCatalogEntries,
+                    objects = setOf(UUID.randomUUID().toString()))
             )
         }.isFailure().hasClass(NoObjectsFoundError::class)
     }
@@ -165,35 +170,38 @@ internal class OpenNGCServiceIT {
     fun `list should filter by constellation abbreviation and full name`() {
         val needle = catalogEntries.random()
 
-        var result = openNGCService.list(0,
-            numberOfCatalogEntries,
-            messier = needle.isMessier(),
-            catalog = needle.id.catalogName.name,
-            objects = setOf(needle.name),
-            constellations = setOf(needle.constellation!!.fullname, UUID.randomUUID().toString())
+        var result = openNGCService.list(
+            OpenNGCService.ListArguments(0,
+                numberOfCatalogEntries,
+                messier = needle.isMessier(),
+                catalog = needle.id.catalogName.name,
+                objects = setOf(needle.name),
+                constellations = setOf(needle.constellation!!.fullname, UUID.randomUUID().toString()))
         )
         assertThat(result.entryList).hasSize(1)
         assertThat(result.entryList.first()).isEqualTo(catalogEntryMapper.map(needle))
 
-        result = openNGCService.list(0,
-            numberOfCatalogEntries,
-            messier = needle.isMessier(),
-            catalog = needle.id.catalogName.name,
-            objects = setOf(needle.name),
-            constellations = setOf(needle.constellation!!.abbrev, UUID.randomUUID().toString())
+        result = openNGCService.list(
+            OpenNGCService.ListArguments(0,
+                numberOfCatalogEntries,
+                messier = needle.isMessier(),
+                catalog = needle.id.catalogName.name,
+                objects = setOf(needle.name),
+                constellations = setOf(needle.constellation!!.abbrev, UUID.randomUUID().toString()))
         )
         assertThat(result.entryList).hasSize(1)
         assertThat(result.entryList.first()).isEqualTo(catalogEntryMapper.map(needle))
 
-        result = openNGCService.list(0,
-            numberOfCatalogEntries,
-            messier = needle.isMessier(),
-            catalog = needle.id.catalogName.name,
-            objects = setOf(needle.name),
-            constellations = setOf(
-                needle.constellation!!.abbrev,
-                needle.constellation!!.fullname,
-                UUID.randomUUID().toString())
+        result = openNGCService.list(
+            OpenNGCService.ListArguments(0,
+                numberOfCatalogEntries,
+                messier = needle.isMessier(),
+                catalog = needle.id.catalogName.name,
+                objects = setOf(needle.name),
+                constellations = setOf(
+                    needle.constellation!!.abbrev,
+                    needle.constellation!!.fullname,
+                    UUID.randomUUID().toString()))
         )
         assertThat(result.entryList).hasSize(1)
         assertThat(result.entryList.first()).isEqualTo(catalogEntryMapper.map(needle))
@@ -202,11 +210,10 @@ internal class OpenNGCServiceIT {
     @Test
     fun `list extended pages correctly first page`() {
         var result = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(0, 1),
             longitude,
             latitude,
-            OffsetDateTime.now(),
-            0,
-            1).let { openNGCService.listExtended(it) }
+            OffsetDateTime.now()).let { openNGCService.listExtended(it) }
 
         assertThat(result.entryList).hasSize(1)
         assertThat(result.firstPage).isTrue()
@@ -217,7 +224,9 @@ internal class OpenNGCServiceIT {
         assertThat(result.nextPageIndex).isNotNull().isEqualTo(1)
         assertThat(result.previousPageIndex).isNull()
 
-        result = OpenNGCService.ListExtendedArguments(longitude, latitude, OffsetDateTime.now(), 0, 24)
+        result = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(0, 24),
+            longitude, latitude, OffsetDateTime.now())
             .let { openNGCService.listExtended(it) }
         assertThat(result.entryList).hasSize(24)
         assertThat(result.firstPage).isTrue()
@@ -229,7 +238,9 @@ internal class OpenNGCServiceIT {
         assertThat(result.previousPageIndex).isNull()
 
         result =
-            OpenNGCService.ListExtendedArguments(longitude, latitude, OffsetDateTime.now(), 0, numberOfCatalogEntries)
+            OpenNGCService.ListExtendedArguments(
+                OpenNGCService.ListArguments(0, numberOfCatalogEntries),
+                longitude, latitude, OffsetDateTime.now())
                 .let { openNGCService.listExtended(it) }
         assertThat(result.entryList).hasSize(numberOfCatalogEntries)
         assertThat(result.firstPage).isTrue()
@@ -240,11 +251,11 @@ internal class OpenNGCServiceIT {
         assertThat(result.nextPageIndex).isNull()
         assertThat(result.previousPageIndex).isNull()
 
-        result = OpenNGCService.ListExtendedArguments(longitude,
+        result = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(0, numberOfCatalogEntries + 1),
+            longitude,
             latitude,
-            OffsetDateTime.now(),
-            0,
-            numberOfCatalogEntries + 1).let { openNGCService.listExtended(it) }
+            OffsetDateTime.now()).let { openNGCService.listExtended(it) }
         assertThat(result.entryList).hasSize(numberOfCatalogEntries)
         assertThat(result.firstPage).isTrue()
         assertThat(result.lastPage).isTrue()
@@ -257,7 +268,10 @@ internal class OpenNGCServiceIT {
 
     @Test
     fun `list extended pages correctly last page`() {
-        val result = OpenNGCService.ListExtendedArguments(longitude, latitude, OffsetDateTime.now(), 4, 24)
+        val result = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(4, 24),
+            longitude, latitude, OffsetDateTime.now()
+        )
             .let { openNGCService.listExtended(it) }
         assertThat(result.entryList).hasSize(4)
         assertThat(result.firstPage).isFalse()
@@ -271,15 +285,21 @@ internal class OpenNGCServiceIT {
 
     @Test
     fun `list extended should correctly handle invalid page input`() {
-        var arguments = OpenNGCService.ListExtendedArguments(longitude, latitude, OffsetDateTime.now(), -1, 25)
+        var arguments = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(-1, 25),
+            longitude, latitude, OffsetDateTime.now())
         assertThat { openNGCService.listExtended(arguments) }
             .isFailure().hasClass(IllegalArgumentException::class)
 
-        arguments = OpenNGCService.ListExtendedArguments(longitude, latitude, OffsetDateTime.now(), 0, 0)
+        arguments = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(0, 0),
+            longitude, latitude, OffsetDateTime.now())
         assertThat { openNGCService.listExtended(arguments) }
             .isFailure().hasClass(IllegalArgumentException::class)
 
-        arguments = OpenNGCService.ListExtendedArguments(longitude, latitude, OffsetDateTime.now(), 4, 25)
+        arguments = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(4, 25),
+            longitude, latitude, OffsetDateTime.now())
         assertThat { openNGCService.listExtended(arguments) }
             .isFailure().hasClass(PageOutOfBoundsError::class)
     }
@@ -289,12 +309,19 @@ internal class OpenNGCServiceIT {
         val needle = catalogEntries.random()
 
         val localTime = OffsetDateTime.now()
-        val result = OpenNGCService.ListExtendedArguments(longitude, latitude, localTime, 0,
-            numberOfCatalogEntries,
-            messier = needle.isMessier(),
-            catalog = needle.id.catalogName.name,
-            objects = setOf(needle.name),
-            constellations = setOf(needle.constellation!!.fullname)).let {
+        val result = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(0,
+                numberOfCatalogEntries,
+                messier = needle.isMessier(),
+                catalog = needle.id.catalogName.name,
+                objects = setOf(needle.name),
+                constellations = setOf(needle.constellation!!.fullname),
+                types = setOf(needle.objectType.abbrev)
+            ),
+            longitude = longitude,
+            latitude = latitude,
+            localTime = localTime
+        ).let {
             openNGCService.listExtended(it)
         }
         assertThat(result.entryList).hasSize(1)
@@ -304,9 +331,11 @@ internal class OpenNGCServiceIT {
 
     @Test
     fun `list extended should throw correct exception when no objects are found`() {
-        val arguments = OpenNGCService.ListExtendedArguments(longitude, latitude, OffsetDateTime.now(), 0,
-            numberOfCatalogEntries,
-            objects = setOf(UUID.randomUUID().toString()))
+        val arguments = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(0,
+                numberOfCatalogEntries,
+                objects = setOf(UUID.randomUUID().toString())),
+            longitude, latitude, OffsetDateTime.now())
         assertThat {
             openNGCService.listExtended(arguments)
         }.isFailure().hasClass(NoObjectsFoundError::class)
@@ -317,44 +346,47 @@ internal class OpenNGCServiceIT {
         val needle = catalogEntries.random()
 
         val localTime = OffsetDateTime.now()
-        var result = OpenNGCService.ListExtendedArguments(longitude,
+        var result = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(0,
+                numberOfCatalogEntries,
+                messier = needle.isMessier(),
+                catalog = needle.id.catalogName.name,
+                objects = setOf(needle.name),
+                constellations = setOf(needle.constellation!!.fullname, UUID.randomUUID().toString())),
+            longitude,
             latitude,
             localTime,
-            0,
-            numberOfCatalogEntries,
-            messier = needle.isMessier(),
-            catalog = needle.id.catalogName.name,
-            objects = setOf(needle.name),
-            constellations = setOf(needle.constellation!!.fullname, UUID.randomUUID().toString()))
-            .let { openNGCService.listExtended(it) }
+        ).let { openNGCService.listExtended(it) }
         assertThat(result.entryList).hasSize(1)
         assertNgcEntryWithHorzonCoordinates(result.entryList.first(), needle, localTime)
 
-        result = OpenNGCService.ListExtendedArguments(longitude,
+        result = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(0,
+                numberOfCatalogEntries,
+                messier = needle.isMessier(),
+                catalog = needle.id.catalogName.name,
+                objects = setOf(needle.name),
+                constellations = setOf(needle.constellation!!.abbrev, UUID.randomUUID().toString())),
+            longitude,
             latitude,
-            localTime,
-            0,
-            numberOfCatalogEntries,
-            messier = needle.isMessier(),
-            catalog = needle.id.catalogName.name,
-            objects = setOf(needle.name),
-            constellations = setOf(needle.constellation!!.abbrev, UUID.randomUUID().toString()))
-            .let { openNGCService.listExtended(it) }
+            localTime).let { openNGCService.listExtended(it) }
         assertThat(result.entryList).hasSize(1)
         assertNgcEntryWithHorzonCoordinates(result.entryList.first(), needle, localTime)
 
-        result = OpenNGCService.ListExtendedArguments(longitude,
+        result = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(0,
+                numberOfCatalogEntries,
+                messier = needle.isMessier(),
+                catalog = needle.id.catalogName.name,
+                objects = setOf(needle.name),
+                constellations = setOf(
+                    needle.constellation!!.abbrev,
+                    needle.constellation!!.fullname,
+                    UUID.randomUUID().toString())),
+            longitude,
             latitude,
             localTime,
-            0,
-            numberOfCatalogEntries,
-            messier = needle.isMessier(),
-            catalog = needle.id.catalogName.name,
-            objects = setOf(needle.name),
-            constellations = setOf(
-                needle.constellation!!.abbrev,
-                needle.constellation!!.fullname,
-                UUID.randomUUID().toString())).let { openNGCService.listExtended(it) }
+        ).let { openNGCService.listExtended(it) }
         assertThat(result.entryList).hasSize(1)
         assertNgcEntryWithHorzonCoordinates(result.entryList.first(), needle, localTime)
     }
@@ -434,7 +466,7 @@ internal class OpenNGCServiceIT {
 
         openNGCService.fetchCatalog()
 
-        val result = openNGCService.list(0, 2)
+        val result = openNGCService.list(OpenNGCService.ListArguments(0, 2))
         assertThat(result.entryList).hasSize(1)
 
         assertThat(result.entryList.first()).isEqualTo(catalogEntryMapper.map(newEntry))

@@ -214,10 +214,23 @@ internal class OpenNgcApiResourceIT {
 
     @Test
     fun `should list objects`() {
+        val arguments = OpenNGCService.ListArguments(
+            0,
+            25,
+            objects = emptySet(),
+            constellations = emptySet(),
+            types = emptySet())
         every {
-            openNGCService.list(0, 25, constellations = emptySet(),
-                objects = emptySet())
-        } returns PagedList(listOf(), 2, 4, 5, 6, 7, true, true)
+            openNGCService.list(arguments)
+        } returns PagedList(listOf(),
+            pageIndex = 2,
+            pageSize = 4,
+            numberOfPages = 5,
+            nextPageIndex = 6,
+            previousPageIndex = 7,
+            numberOfEntries = 8,
+            firstPage = true,
+            lastPage = true)
 
         When {
             get()
@@ -228,14 +241,13 @@ internal class OpenNgcApiResourceIT {
             header("x-total-pages", "5")
             header("x-next-page-index", "6")
             header("x-previous-page-index", "7")
+            header("x-total-entries", "8")
             header("x-first-page", "true")
             header("x-last-page", "true")
         }
 
         verify {
-            openNGCService.list(0, 25,
-                constellations = emptySet(),
-                objects = emptySet())
+            openNGCService.list(arguments)
         }
     }
 
@@ -243,16 +255,26 @@ internal class OpenNgcApiResourceIT {
     fun `should list extended objects`() {
         val now = OffsetDateTime.now()
         val arguments = OpenNGCService.ListExtendedArguments(
+            OpenNGCService.ListArguments(0,
+                25,
+                constellations = emptySet(),
+                objects = emptySet(),
+                types = emptySet()),
             8.83,
             47.32,
-            now,
-            0,
-            25,
-            constellations = emptySet(),
-            objects = emptySet())
+            now
+        )
         every {
             openNGCService.listExtended(arguments)
-        } returns PagedList(listOf(), 2, 4, 5, 6, 7, true, true)
+        } returns PagedList(listOf(),
+            pageIndex = 2,
+            pageSize = 4,
+            numberOfPages = 5,
+            nextPageIndex = 6,
+            previousPageIndex = 7,
+            numberOfEntries = 8,
+            firstPage = true,
+            lastPage = true)
 
         When {
             get("{longitude}/{latitude}/{localTime}", mapOf(
@@ -266,6 +288,7 @@ internal class OpenNgcApiResourceIT {
             header("x-total-pages", "5")
             header("x-next-page-index", "6")
             header("x-previous-page-index", "7")
+            header("x-total-entries", "8")
             header("x-first-page", "true")
             header("x-last-page", "true")
         }
@@ -277,13 +300,25 @@ internal class OpenNgcApiResourceIT {
 
     @Test
     fun `should list objects with query parameters`() {
+        val arguments = OpenNGCService.ListArguments(2, 4,
+            messier = true,
+            catalog = "IC",
+            objects = setOf("object1", "object2"),
+            constellations = setOf("cons1", "cons2"),
+            types = setOf("type1", "type2"),
+            vMagnitudeMax = 5.0,
+            vMagnitudeMin = 10.0)
         every {
-            openNGCService.list(2, 4,
-                messier = true,
-                catalog = "IC",
-                objects = setOf("object1", "object2"),
-                constellations = setOf("cons1", "cons2"))
-        } returns PagedList(listOf(), 2, 4, 5, 6, 7, true, true)
+            openNGCService.list(arguments)
+        } returns PagedList(listOf(),
+            pageIndex = 2,
+            pageSize = 4,
+            numberOfPages = 5,
+            nextPageIndex = 6,
+            previousPageIndex = 7,
+            numberOfEntries = 8,
+            firstPage = true,
+            lastPage = true)
 
         Given {
             queryParam("page-index", "2")
@@ -294,6 +329,10 @@ internal class OpenNgcApiResourceIT {
             queryParam("objects", "object2")
             queryParam("constellations", "cons1")
             queryParam("constellations", "cons2")
+            queryParam("v-mag-max", "5.0")
+            queryParam("v-mag-min", "10.0")
+            queryParam("types", "type1")
+            queryParam("types", "type2")
         } When {
             get()
         } Then {
@@ -301,11 +340,7 @@ internal class OpenNgcApiResourceIT {
         }
 
         verify {
-            openNGCService.list(2, 4,
-                messier = true,
-                catalog = "IC",
-                objects = setOf("object1", "object2"),
-                constellations = setOf("cons1", "cons2"))
+            openNGCService.list(arguments)
         }
     }
 
@@ -313,19 +348,34 @@ internal class OpenNgcApiResourceIT {
     fun `should list extended objects with query parameters`() {
         val now = OffsetDateTime.now()
         val arguments = OpenNGCService.ListExtendedArguments(
-            8.83,
-            47.32,
-            now,
-            2,
-            4,
-            messier = true,
-            catalog = "IC",
-            objects = setOf("object1", "object2"),
-            constellations = setOf("cons1", "cons2")
+            OpenNGCService.ListArguments(
+                2,
+                4,
+                messier = true,
+                catalog = "IC",
+                objects = setOf("object1", "object2"),
+                constellations = setOf("cons1", "cons2"),
+                types = setOf("type1", "type2"),
+                vMagnitudeMin = 10.0,
+                vMagnitudeMax = 5.0),
+            longitude = 8.83,
+            latitude = 47.32,
+            localTime = now,
+            altitudeMin = 15.0,
+            altitudeMax = 20.0
         )
+
         every {
             openNGCService.listExtended(arguments)
-        } returns PagedList(listOf(), 2, 4, 5, 6, 7, true, true)
+        } returns PagedList(listOf(),
+            pageIndex = 2,
+            pageSize = 4,
+            numberOfPages = 5,
+            nextPageIndex = 6,
+            previousPageIndex = 7,
+            numberOfEntries = 8,
+            firstPage = true,
+            lastPage = true)
 
         Given {
             queryParam("page-index", "2")
@@ -336,6 +386,12 @@ internal class OpenNgcApiResourceIT {
             queryParam("objects", "object2")
             queryParam("constellations", "cons1")
             queryParam("constellations", "cons2")
+            queryParam("v-mag-max", "5.0")
+            queryParam("v-mag-min", "10.0")
+            queryParam("alt-min", "15.0")
+            queryParam("alt-max", "20.0")
+            queryParam("types", "type1")
+            queryParam("types", "type2")
         } When {
             get("{longitude}/{latitude}/{localTime}", mapOf(
                 "longitude" to "8.83",
@@ -352,9 +408,15 @@ internal class OpenNgcApiResourceIT {
 
     @Test
     fun `should handle paging error`() {
+        val arguments = OpenNGCService.ListArguments(
+            0,
+            25,
+            objects = emptySet(),
+            constellations = emptySet(),
+            types = emptySet()
+        )
         every {
-            openNGCService.list(0, 25, constellations = emptySet(),
-                objects = emptySet())
+            openNGCService.list(arguments)
         } throws PageOutOfBoundsError("")
 
         When {
@@ -364,17 +426,20 @@ internal class OpenNgcApiResourceIT {
         }
 
         verify {
-            openNGCService.list(0, 25,
-                constellations = emptySet(),
-                objects = emptySet())
+            openNGCService.list(arguments)
         }
     }
 
     @Test
     fun `should handle illegal argument exception`() {
+        val arguments = OpenNGCService.ListArguments(
+            0,
+            25,
+            objects = emptySet(),
+            constellations = emptySet(),
+            types = emptySet())
         every {
-            openNGCService.list(0, 25, constellations = emptySet(),
-                objects = emptySet())
+            openNGCService.list(arguments)
         } throws IllegalArgumentException()
 
         When {
@@ -384,17 +449,20 @@ internal class OpenNgcApiResourceIT {
         }
 
         verify {
-            openNGCService.list(0, 25,
-                constellations = emptySet(),
-                objects = emptySet())
+            openNGCService.list(arguments)
         }
     }
 
     @Test
     fun `should handle exception`() {
+        val arguments = OpenNGCService.ListArguments(
+            0,
+            25,
+            objects = emptySet(),
+            constellations = emptySet(),
+            types = emptySet())
         every {
-            openNGCService.list(0, 25, constellations = emptySet(),
-                objects = emptySet())
+            openNGCService.list(arguments)
         } throws Exception()
 
         When {
@@ -404,17 +472,20 @@ internal class OpenNgcApiResourceIT {
         }
 
         verify {
-            openNGCService.list(0, 25,
-                constellations = emptySet(),
-                objects = emptySet())
+            openNGCService.list(arguments)
         }
     }
 
     @Test
     fun `should handle no objects found`() {
+        val arguments = OpenNGCService.ListArguments(
+            0,
+            25,
+            objects = emptySet(),
+            constellations = emptySet(),
+            types = emptySet())
         every {
-            openNGCService.list(0, 25, constellations = emptySet(),
-                objects = emptySet())
+            openNGCService.list(arguments)
         } throws NoObjectsFoundError("")
 
         When {
@@ -424,9 +495,7 @@ internal class OpenNgcApiResourceIT {
         }
 
         verify {
-            openNGCService.list(0, 25,
-                constellations = emptySet(),
-                objects = emptySet())
+            openNGCService.list(arguments)
         }
     }
 }

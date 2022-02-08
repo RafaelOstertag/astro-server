@@ -5,6 +5,7 @@ data class PagedList<T>(
     val pageIndex: Int,
     val pageSize: Int,
     val numberOfPages: Int,
+    val numberOfEntries: Int,
     val nextPageIndex: Int?,
     val previousPageIndex: Int?,
     val firstPage: Boolean,

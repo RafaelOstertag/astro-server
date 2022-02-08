@@ -39,21 +39,31 @@ class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcAp
         pageIndex: Int,
         messier: Boolean?,
         catalog: String?,
-        objects: MutableSet<String>?,
-        constellations: MutableSet<String>?,
+        objects: Set<String>?,
+        constellations: Set<String>?,
+        vMagMax: Double?,
+        vMagMin: Double?,
+        altMax: Double?,
+        altMin: Double?,
+        types: Set<String>?,
     ): Response = OpenNGCService.ListExtendedArguments(
-        longitude,
-        latitude,
-        localTime,
-        pageIndex,
-        pageSize,
-        messier,
-        catalog,
-        objects,
-        constellations
-    ).let {
-        openNGCService.listExtended(it).toResponse()
-    }
+        OpenNGCService.ListArguments(
+            pageIndex = pageIndex,
+            pageSize = pageSize,
+            messier = messier,
+            catalog = catalog,
+            objects = objects,
+            types = types,
+            constellations = constellations,
+            vMagnitudeMax = vMagMax,
+            vMagnitudeMin = vMagMin,
+        ),
+        longitude = longitude,
+        latitude = latitude,
+        localTime = localTime,
+        altitudeMax = altMax,
+        altitudeMin = altMin
+    ).let { openNGCService.listExtended(it) }.toResponse()
 
     override fun listObjects(
         pageSize: Int,
@@ -62,7 +72,20 @@ class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcAp
         catalog: String?,
         objects: Set<String>?,
         constellations: Set<String>?,
-    ): Response = openNGCService.list(pageIndex, pageSize, messier, catalog, objects, constellations).toResponse()
+        vMagMax: Double?,
+        vMagMin: Double?,
+        types: Set<String>?,
+    ): Response = OpenNGCService.ListArguments(
+        pageIndex = pageIndex,
+        pageSize = pageSize,
+        messier = messier,
+        catalog = catalog,
+        objects = objects,
+        types = types,
+        constellations = constellations,
+        vMagnitudeMax = vMagMax,
+        vMagnitudeMin = vMagMin
+    ).let { openNGCService.list(it) }.toResponse()
 
     private fun <T> PagedList<T>.toResponse(): Response {
         val response = Response.ok(entryList)
@@ -71,6 +94,7 @@ class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcAp
             .header("x-first-page", firstPage)
             .header("x-last-page", lastPage)
             .header("x-total-pages", numberOfPages)
+            .header("x-total-entries", numberOfEntries)
 
         if (previousPageIndex != null) {
             response.header("x-previous-page-index", previousPageIndex)
@@ -83,3 +107,4 @@ class OpenNgcApiResource(private val openNGCService: OpenNGCService) : OpenNgcAp
         return response.build()
     }
 }
+
