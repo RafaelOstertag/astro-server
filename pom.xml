@@ -51,14 +51,14 @@
 
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>2.6.3.Final</quarkus.platform.version>
+        <quarkus.platform.version>2.7.1.Final</quarkus.platform.version>
 
         <assertk-jvm.version>0.25</assertk-jvm.version>
         <astrolib.version>6.0.0</astrolib.version>
         <easy-random.version>5.0.0</easy-random.version>
         <javax.annotation-api.version>1.3.2</javax.annotation-api.version>
         <javax.ws.rs-api.version>2.1.1</javax.ws.rs-api.version>
-        <quarkus-junit5-mockk.version>0.3.0</quarkus-junit5-mockk.version>
+        <quarkus-junit5-mockk.version>1.0.1</quarkus-junit5-mockk.version>
         <validation-api.version>2.0.1.Final</validation-api.version>
         <wiremock.version>2.32.0</wiremock.version>
 
