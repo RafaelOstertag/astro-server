@@ -1,5 +1,7 @@
 "%test":
   quarkus:
+    http:
+      test-port: 0
     jacoco:
       reuse-data-file: true
     keycloak:
