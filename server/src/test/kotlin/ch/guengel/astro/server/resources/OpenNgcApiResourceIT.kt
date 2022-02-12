@@ -43,7 +43,7 @@ internal class OpenNgcApiResourceIT {
 
     @Test
     @TestSecurity(user = "someuser", roles = ["admin"])
-    fun `should fetch when authenticated with correct role catalog`() {
+    fun `should fetch catalog when authenticated with correct role`() {
         justRun { openNGCService.fetchCatalog() }
 
         When {
