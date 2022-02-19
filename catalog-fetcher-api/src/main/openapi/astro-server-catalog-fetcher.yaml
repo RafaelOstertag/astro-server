@@ -1,0 +1,78 @@
+openapi: 3.0.3
+info:
+  title: Astro Server
+  version: '1.0'
+  contact:
+    name: Rafael Ostertag
+    email: rafi@guengel.ch
+  description: 'Fetch OpenNGC catalog from [OpenNGC](https://github.com/mattiaverga/OpenNGC) on GitHub.'
+servers:
+  - url: 'http://localhost:8081'
+    description: Local instance
+  - url: 'https://astro.guengel.ch'
+    description: Production
+paths:
+  /v1/open-ngc/catalog/fetch:
+    put:
+      summary: Fetch OpenNGC Catalog
+      operationId: fetchCatalog
+      responses:
+        '204':
+          description: No Content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+      tags:
+        - OpenNGCCatalog
+      description: Fetch (update) catalog from GitHub
+      security:
+        - openid-connect: [ ]
+  /v1/open-ngc/catalog/last-update:
+    get:
+      summary: Get Catalog Last Update
+      tags:
+        - OpenNGCCatalog
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogLastUpdate'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      operationId: getLastCatalogUpdate
+      description: Returns date and time of last catalog update
+components:
+  schemas:
+    CatalogLastUpdate:
+      title: Catalog Last Update
+      type: object
+      description: Information when catalog was last updated
+      properties:
+        lastUpdated:
+          type: string
+          description: Date/time of last update
+          format: date-time
+    ErrorMessage:
+      title: Error Message
+      type: object
+      description: Error message
+      properties:
+        reason:
+          type: string
+          description: Reason of the error
+      required:
+        - reason
+  securitySchemes:
+    openid-connect:
+      type: openIdConnect
+      description: ''
+      openIdConnectUrl: 'https://sso.guengel.ch/auth/realms/astro/'
+tags:
+  - name: OpenNGCCatalog

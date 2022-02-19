@@ -145,12 +145,14 @@ pipeline {
                             sh "mvn -B -s \"$MAVEN_SETTINGS_XML\" clean install -DskipTests"
                         }
                         buildDockerImage("server", "latest-arm64")
+                        buildDockerImage("catalog-fetcher", "latest-arm64")
                     }
                 }
 
                 stage("AMD64") {
                     steps {
                         buildDockerImage("server", "latest-amd64")
+                        buildDockerImage("catalog-fetcher", "latest-amd64")
                     }
                 }
             }
@@ -192,6 +194,7 @@ pipeline {
                             sh "mvn -B -s \"$MAVEN_SETTINGS_XML\" clean install -DskipTests"
                         }
                         buildDockerImage("server", env.VERSION + "-arm64")
+                        buildDockerImage("catalog-fetcher", env.VERSION + "-arm64")
                     }
                 }
 
@@ -202,6 +205,7 @@ pipeline {
 
                     steps {
                         buildDockerImage("server", env.VERSION + "-amd64")
+                        buildDockerImage("catalog-fetcher", env.VERSION + "-amd64")
                     }
                 }
             }

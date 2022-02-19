@@ -2,6 +2,7 @@ package ch.guengel.astro.server.ngc
 
 import assertk.assertThat
 import assertk.assertions.hasClass
+import assertk.assertions.hasMessage
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
@@ -490,26 +491,26 @@ internal class OpenNGCServiceIT {
     }
 
     @Test
-    fun `fetch catalog should call catalog provider`() {
+    fun `load catalog should call catalog provider`() {
         val newEntry = easyRandom.nextObject(NgcEntry::class.java)
-        every { catalogProvider.fetchCatalog() } returns Catalog(listOf(newEntry))
+        every { catalogProvider.loadCatalog() } returns Catalog(listOf(newEntry))
 
-        openNGCService.fetchCatalog()
+        openNGCService.loadCatalog()
 
         val result = openNGCService.list(OpenNGCService.ListArguments(0, 2))
         assertThat(result.entryList).hasSize(1)
 
         assertThat(result.entryList.first()).isEqualTo(catalogEntryMapper.map(newEntry))
-        verify { catalogProvider.fetchCatalog() }
+        verify { catalogProvider.loadCatalog() }
     }
 
     @Test
-    fun `fetch catalog should not die on exception`() {
-        every { catalogProvider.fetchCatalog() } throws RuntimeException("Test exception")
+    fun `load catalog should die on exception`() {
+        every { catalogProvider.loadCatalog() } throws RuntimeException("Test exception")
 
-        assertThat { openNGCService.fetchCatalog() }.isSuccess()
+        assertThat { openNGCService.loadCatalog() }.isFailure().hasMessage("Test exception")
 
-        verify { catalogProvider.fetchCatalog() }
+        verify { catalogProvider.loadCatalog() }
     }
 
     @Test
