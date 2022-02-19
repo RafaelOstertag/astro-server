@@ -284,7 +284,9 @@ def buildMultiArchManifest(String tag) {
         withCredentials([usernamePassword(credentialsId: '750504ce-6f4f-4252-9b2b-5814bd561430', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
             sh 'docker login --username "$USERNAME" --password "$PASSWORD"'
             sh 'docker manifest create "rafaelostertag/astro-server:${IMAGE_TAG}" --amend "rafaelostertag/astro-server:${IMAGE_TAG}-amd64" --amend "rafaelostertag/astro-server:${IMAGE_TAG}-arm64"'
+            sh 'docker manifest create "rafaelostertag/astro-server-catalog-fetcher:${IMAGE_TAG}" --amend "rafaelostertag/astro-server-catalog-fetcher:${IMAGE_TAG}-amd64" --amend "rafaelostertag/astro-server-catalog-fetcher:${IMAGE_TAG}-arm64"'
             sh 'docker manifest push --purge "rafaelostertag/astro-server:${IMAGE_TAG}"'
+            sh 'docker manifest push --purge "rafaelostertag/astro-server-catalog-fetcher:${IMAGE_TAG}"'
         }
     }
 }
