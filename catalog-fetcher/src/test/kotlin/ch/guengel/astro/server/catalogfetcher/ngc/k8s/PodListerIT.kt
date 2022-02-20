@@ -50,6 +50,6 @@ internal class PodListerIT {
     fun `should list pod IPs`() {
         val podIPs = podLister.listAstroPodIPs()
         assertThat(podIPs)
-            .containsAll("127.0.0.2", "127.0.0.3")
+            .containsAll("127.0.0.2:8080", "127.0.0.3:8080")
     }
 }

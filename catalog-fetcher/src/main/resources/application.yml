@@ -23,6 +23,7 @@ astro-server:
       scheme: http
       timeout: PT5S
       pod-prefix: astro-server
+      pod-port: 8080
     cron:
       expression: "0 0 5 * * ?"
 

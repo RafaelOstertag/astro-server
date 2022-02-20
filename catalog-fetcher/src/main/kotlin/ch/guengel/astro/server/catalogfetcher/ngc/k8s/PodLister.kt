@@ -9,6 +9,7 @@ import javax.enterprise.context.ApplicationScoped
 class PodLister(
     private val kubernetesClient: KubernetesClient,
     @ConfigProperty(name = "astro-server.catalog-fetcher.notification.pod-prefix") private val podPrefix: String,
+    @ConfigProperty(name = "astro-server.catalog-fetcher.notification.pod-port") private val podPort: Int,
 ) {
     fun listAstroPodIPs(): List<String> =
         kubernetesClient
@@ -17,7 +18,7 @@ class PodLister(
                 pod.metadata.name.startsWith(podPrefix)
             }
             .map { pod ->
-                pod.status.podIP
+                "${pod.status.podIP}:$podPort"
             }
             .apply {
                 log.info("Identified following IP(s): ${this.joinToString()}")
