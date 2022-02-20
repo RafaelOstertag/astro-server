@@ -7,7 +7,6 @@ quarkus:
     client-id: astro-server-catalog-fetcher-service
   oidc:
     auth-server-url: https://sso.guengel.ch/auth/realms/astro
-    client-id: astro-server-catalog-fetcher-service
     enabled: true
     discovery-enabled: true
   kubernetes-client:
