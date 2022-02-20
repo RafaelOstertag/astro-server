@@ -2,9 +2,10 @@ quarkus:
   http:
     access-log:
       enabled: true
-  oidc-client:
-    auth-server-url: https://sso.guengel.ch/auth/realms/astro
-    client-id: astro-server-catalog-fetcher-service
+  # Must be specified as ENV vars
+  #  oidc-client:
+  #    auth-server-url: https://sso.guengel.ch/auth/realms/astro
+  #    client-id: astro-server-catalog-fetcher-service
   oidc:
     auth-server-url: https://sso.guengel.ch/auth/realms/astro
     enabled: true
