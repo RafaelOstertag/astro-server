@@ -145,12 +145,14 @@ pipeline {
                             sh "mvn -B -s \"$MAVEN_SETTINGS_XML\" clean install -DskipTests"
                         }
                         buildDockerImage("server", "latest-arm64")
+                        buildDockerImage("catalog-fetcher", "latest-arm64")
                     }
                 }
 
                 stage("AMD64") {
                     steps {
                         buildDockerImage("server", "latest-amd64")
+                        buildDockerImage("catalog-fetcher", "latest-amd64")
                     }
                 }
             }
@@ -192,6 +194,7 @@ pipeline {
                             sh "mvn -B -s \"$MAVEN_SETTINGS_XML\" clean install -DskipTests"
                         }
                         buildDockerImage("server", env.VERSION + "-arm64")
+                        buildDockerImage("catalog-fetcher", env.VERSION + "-arm64")
                     }
                 }
 
@@ -202,6 +205,7 @@ pipeline {
 
                     steps {
                         buildDockerImage("server", env.VERSION + "-amd64")
+                        buildDockerImage("catalog-fetcher", env.VERSION + "-amd64")
                     }
                 }
             }
@@ -280,7 +284,9 @@ def buildMultiArchManifest(String tag) {
         withCredentials([usernamePassword(credentialsId: '750504ce-6f4f-4252-9b2b-5814bd561430', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
             sh 'docker login --username "$USERNAME" --password "$PASSWORD"'
             sh 'docker manifest create "rafaelostertag/astro-server:${IMAGE_TAG}" --amend "rafaelostertag/astro-server:${IMAGE_TAG}-amd64" --amend "rafaelostertag/astro-server:${IMAGE_TAG}-arm64"'
+            sh 'docker manifest create "rafaelostertag/astro-server-catalog-fetcher:${IMAGE_TAG}" --amend "rafaelostertag/astro-server-catalog-fetcher:${IMAGE_TAG}-amd64" --amend "rafaelostertag/astro-server-catalog-fetcher:${IMAGE_TAG}-arm64"'
             sh 'docker manifest push --purge "rafaelostertag/astro-server:${IMAGE_TAG}"'
+            sh 'docker manifest push --purge "rafaelostertag/astro-server-catalog-fetcher:${IMAGE_TAG}"'
         }
     }
 }

@@ -1,0 +1,19 @@
+"%test":
+  quarkus:
+    http:
+      test-port: 0
+    jacoco:
+      reuse-data-file: true
+    keycloak:
+      devservices:
+        enabled: false
+    kubernetes-client:
+      namespace: test
+  astro-server:
+    catalog-file-path: /tmp/test/ngc.csv
+    catalog-fetcher:
+      notification:
+        # Path on astro server instance
+        path: /v1/open-ngc/catalog/reload
+        scheme: http
+        timeout: PT5S

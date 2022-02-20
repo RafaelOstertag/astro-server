@@ -1,0 +1,616 @@
+openapi: 3.0.3
+info:
+  title: Astro Server
+  version: '2.0'
+  contact:
+    name: Rafael Ostertag
+    email: rafi@guengel.ch
+  description: 'Expose OpenNGC Catalog. The catalog is based on [OpenNGC](https://github.com/mattiaverga/OpenNGC) on GitHub.'
+servers:
+  - url: 'http://localhost:8080'
+    description: Local instance
+  - url: 'https://astro.guengel.ch'
+    description: Production
+paths:
+  /v1/open-ngc:
+    get:
+      summary: List OpenNGC catalog objects
+      tags:
+        - OpenNGC
+      operationId: listObjects
+      description: Get OpenNGC catalog entries
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageIndex'
+        - $ref: '#/components/parameters/messier'
+        - $ref: '#/components/parameters/catalog'
+        - $ref: '#/components/parameters/objects'
+        - $ref: '#/components/parameters/constellations'
+        - $ref: '#/components/parameters/v-mag-max'
+        - $ref: '#/components/parameters/v-mag-min'
+        - $ref: '#/components/parameters/types'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NGCEntry'
+          headers:
+            x-page-size:
+              schema:
+                type: integer
+              description: Current page size
+            x-page-index:
+              schema:
+                type: integer
+              description: Current page index
+            x-previous-page-index:
+              schema:
+                type: integer
+              description: 'Previous page index, if applicable'
+            x-next-page-index:
+              schema:
+                type: integer
+              description: 'Next page index, if applicable'
+            x-first-page:
+              schema:
+                type: boolean
+              description: Indicates whether or not this is the first page
+            x-last-page:
+              schema:
+                type: boolean
+              description: Indicate whether or not this is the last page
+            x-total-pages:
+              schema:
+                type: integer
+              description: Number of pages with this page size
+            x-total-entries:
+              schema:
+                type: integer
+              description: Total number of entries
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/v1/open-ngc/{object-name}':
+    parameters:
+      - $ref: '#/components/parameters/object-name'
+    get:
+      summary: Get an OpenNGC catalog object
+      tags:
+        - OpenNGC
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NGCEntry'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      operationId: getObject
+      description: Get a specific object by object name
+  '/v1/open-ngc/{longitude}/{latitude}/{local-time}':
+    parameters:
+      - $ref: '#/components/parameters/longitude'
+      - $ref: '#/components/parameters/latitude'
+      - $ref: '#/components/parameters/local-time'
+    get:
+      summary: List OpenNGC with horizontal coordinates
+      tags:
+        - OpenNGC
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageIndex'
+        - $ref: '#/components/parameters/messier'
+        - $ref: '#/components/parameters/catalog'
+        - $ref: '#/components/parameters/objects'
+        - $ref: '#/components/parameters/constellations'
+        - $ref: '#/components/parameters/v-mag-max'
+        - $ref: '#/components/parameters/v-mag-min'
+        - $ref: '#/components/parameters/alt-max'
+        - $ref: '#/components/parameters/alt-min'
+        - $ref: '#/components/parameters/types'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NGCEntryWithHorizontalCoordinates'
+          headers:
+            x-page-size:
+              schema:
+                type: integer
+              description: Current page size
+            x-page-index:
+              schema:
+                type: integer
+              description: Current page index
+            x-previous-page-index:
+              schema:
+                type: integer
+              description: 'Previous page index, if applicable'
+            x-next-page-index:
+              schema:
+                type: integer
+              description: 'Next page index, if applicable'
+            x-first-page:
+              schema:
+                type: boolean
+              description: Indicates whether or not this is the first page
+            x-last-page:
+              schema:
+                type: boolean
+              description: Indicate whether or not this is the last page
+            x-total-pages:
+              schema:
+                type: integer
+              description: Number of pages with this page size
+            x-total-entries:
+              schema:
+                type: integer
+              description: Total number of entries
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      operationId: listObjectsExtended
+      description: Get catalog entries with horizontal coordinates
+  '/v1/open-ngc/{longitude}/{latitude}/{local-time}/{object-name}':
+    parameters:
+      - $ref: '#/components/parameters/longitude'
+      - $ref: '#/components/parameters/latitude'
+      - $ref: '#/components/parameters/local-time'
+      - $ref: '#/components/parameters/object-name'
+    get:
+      summary: Get catalog entry with horizontal coordinates
+      tags:
+        - OpenNGC
+      parameters: [ ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NGCEntryWithHorizontalCoordinates'
+          headers: { }
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      operationId: getObjectExtended
+      description: Get a specific object with horizontal coordinates
+  /v1/open-ngc/catalog/last-update:
+    get:
+      summary: Get Catalog Last Update
+      tags:
+        - OpenNGC
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogLastUpdate'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      operationId: getLastCatalogUpdate
+      description: Returns date and time of last catalog update
+  /v1/open-ngc/catalog/reload:
+    put:
+      summary: Reload OpenNGC Catalog
+      operationId: reloadCatalog
+      responses:
+        '204':
+          description: No Content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+      tags:
+        - OpenNGC
+      description: Reload the catalog from disk.
+      security:
+        - openid-connect: [ ]
+  /v1/open-ngc/types:
+    get:
+      summary: List Object Types
+      tags:
+        - OpenNGC
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObjectType'
+      operationId: getTypes
+      description: List all object types
+  /v1/open-ngc/constellations:
+    get:
+      summary: List Constellations
+      tags:
+        - OpenNGC
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Constellation'
+      operationId: getConstellations
+      description: List all constellations
+components:
+  schemas:
+    NGCEntry:
+      title: NGC Catalog Entry
+      type: object
+      description: Catalog Entry
+      properties:
+        catalogName:
+          type: string
+          description: Catalog object is listed in
+        name:
+          type: string
+          description: Object name
+        type:
+          $ref: '#/components/schemas/ObjectType'
+        equatorialCoordinates:
+          $ref: '#/components/schemas/EquatorialCoordinates'
+        constellation:
+          $ref: '#/components/schemas/Constellation'
+        majorAxis:
+          type: number
+          description: 'Major axis, expressed in arcmin'
+        minorAxis:
+          type: number
+          description: 'Minor axis, expressed in arcmin'
+        positionAngle:
+          type: number
+          description: Major axis position angle (North Eastwards)
+        bMag:
+          type: number
+          description: Apparent total magnitude in B filter
+        vMag:
+          type: number
+          description: Apparent total magnitude in V filter
+        jMag:
+          type: number
+          description: Apparent total magnitude in J filter
+        hMag:
+          type: number
+          description: Apparent total magnitude in H filter
+        kMag:
+          type: number
+          description: Apparent total magnitude in K filter
+        surfaceBrightness:
+          type: number
+          description: 'Mean surface brigthness within 25 mag isophot (B-band), expressed in mag/arcsec2. Galaxies only.'
+        hubble:
+          type: string
+          description: Morphological type. Galaxies only
+        parallax:
+          type: number
+          description: 'Parallax, expressed in milliarcseconds'
+        properMotionRA:
+          description: 'Proper motion in RA, expressed in milliarcseconds/year'
+          type: number
+        properMotionDec:
+          description: 'Proper motion in Dec, expressed in milliarcseconds/year'
+          type: number
+        radialVelocity:
+          type: number
+          description: 'Radial velocity (heliocentric), expressed in km/s'
+        redshift:
+          type: number
+          description: Redshift (heliocentric)
+        cstarUMag:
+          description: Apparent magnitude of central star in U filter. Planetary Nebulae only.
+          type: number
+        cstarBMag:
+          type: number
+          description: Apparent magnitude of central star in B filter. Planetary Nebulae only.
+        cstarVMag:
+          description: Apparent magnitude of central star in V filter. Planetary Nebulae only.
+          type: number
+        messier:
+          type: integer
+          description: Cross reference Messier number
+        ngc:
+          type: string
+          description: 'other NGC identification, if the object is listed twice in the catalog.'
+        ic:
+          type: string
+          description: 'Cross reference IC number, if the object is also listed with that identification.'
+        cstarNames:
+          type: array
+          description: Central star identifications. Planetary Nebulae only.
+          items:
+            type: string
+        identifiers:
+          type: array
+          description: Cross reference with other catalogs.
+          items:
+            type: string
+        commonNames:
+          type: array
+          description: Common names of the object if any.
+          items:
+            type: string
+        nedNotes:
+          type: string
+          description: Notes about object exported from NED.
+        openNGCNotes:
+          type: string
+          description: Notes about the object data from OpenNGC catalog.
+      required:
+        - catalogName
+        - name
+        - type
+    ObjectType:
+      title: Object Type
+      type: object
+      description: Describes object type
+      properties:
+        abbrev:
+          type: string
+          description: Abbreviation
+        description:
+          type: string
+          description: Object type description
+    EquatorialCoordinates:
+      title: Equatorial Coordinates
+      type: object
+      description: Equatorial coordinates
+      properties:
+        ra:
+          type: string
+          description: Right ascension in J2000 epoch
+        dec:
+          type: string
+          description: Declination in degrees (J2000 epoch)
+        raDecimal:
+          type: number
+          description: Decimal right ascension
+        decDecimal:
+          type: number
+          description: Decimal declination in degrees
+      required:
+        - ra
+        - dec
+        - raDecimal
+        - decDecimal
+    Constellation:
+      title: Constellation
+      type: object
+      description: Constellation
+      properties:
+        abbrev:
+          type: string
+          description: Constellation abbreviation
+        fullname:
+          type: string
+          description: Constellation full name
+      required:
+        - abbrev
+        - fullname
+    ErrorMessage:
+      title: Error Message
+      type: object
+      description: Error message
+      properties:
+        reason:
+          type: string
+          description: Reason of the error
+      required:
+        - reason
+    CatalogLastUpdate:
+      title: Catalog Last Update
+      type: object
+      description: Information when catalog was last updated
+      properties:
+        lastUpdated:
+          type: string
+          description: Date/time of last update
+          format: date-time
+    NGCEntryWithHorizontalCoordinates:
+      title: NGC Entry With Horizontal Coordinates
+      type: object
+      description: NGC Entry with horizontal coordinates
+      properties:
+        entry:
+          $ref: '#/components/schemas/NGCEntry'
+        horizontalCoordinates:
+          $ref: '#/components/schemas/HorizontalCoordinates'
+      required:
+        - entry
+        - horizontalCoordinates
+    HorizontalCoordinates:
+      title: HorizontalCoordinates
+      type: object
+      description: Horizontal Coordinates
+      properties:
+        alt:
+          type: string
+          description: Altitude
+        az:
+          type: string
+          description: Azmiuth
+        altDec:
+          type: number
+          description: Altitude in decimal degrees
+        azDec:
+          description: Azimuth in decimal degrees
+          type: number
+      required:
+        - alt
+        - az
+        - altDec
+        - azDec
+  parameters:
+    pageSize:
+      name: page-size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+        format: int32
+        default: 25
+      description: Page size
+    pageIndex:
+      name: page-index
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        format: int32
+        default: 0
+      description: 'Page number to retrieve, zero based'
+    messier:
+      name: messier
+      in: query
+      required: false
+      schema:
+        type: boolean
+      description: Only Messier objects
+    catalog:
+      name: catalog
+      in: query
+      required: false
+      schema:
+        enum:
+          - IC
+          - NGC
+        type: string
+        pattern: ^(IC|NGC)$
+      description: Use either `IC` or `NGC`  catalog
+    objects:
+      name: objects
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+        uniqueItems: true
+        example: NGC1701
+      description: Only list these objects
+      style: form
+    constellations:
+      name: constellations
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+        uniqueItems: true
+      description: List only objects in this constellations
+      style: form
+    longitude:
+      name: longitude
+      in: path
+      required: true
+      schema:
+        type: number
+        minimum: -180
+        maximum: 180
+      description: 'Longitude of the observer. Positive values are eastwards, negative values are westwards'
+    latitude:
+      name: latitude
+      in: path
+      required: true
+      schema:
+        type: number
+        minimum: -90
+        maximum: 90
+      description: 'Latitude of the observer. Positive values are northwards, negative values are southwards'
+    local-time:
+      name: local-time
+      in: path
+      required: true
+      schema:
+        type: string
+        format: date-time
+        example: '2022-01-29T18:10:05.01+01:00'
+      description: Local time of the observer
+    object-name:
+      name: object-name
+      in: path
+      required: true
+      schema:
+        type: string
+        example: NGC7818
+      description: 'Name of the object, start with `IC` or `NGC`'
+    v-mag-max:
+      name: v-mag-max
+      in: query
+      required: false
+      schema:
+        type: number
+      description: Maximum v-Magnitude
+    v-mag-min:
+      name: v-mag-min
+      in: query
+      required: false
+      schema:
+        type: number
+      description: Minmum v-Magnitude
+    alt-min:
+      name: alt-min
+      in: query
+      required: false
+      schema:
+        type: number
+      description: Minimum altitude in decimal degrees
+    alt-max:
+      name: alt-max
+      in: query
+      required: false
+      schema:
+        type: number
+      description: Maximum altitude in decimal degrees
+    types:
+      name: types
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+        uniqueItems: true
+        example: '**'
+      description: List only these types. Use the abbreviation as received from `v1/open-ngc/types` endpoint.
+      style: form
+  securitySchemes:
+    openid-connect:
+      type: openIdConnect
+      description: ''
+      openIdConnectUrl: 'https://sso.guengel.ch/auth/realms/astro/'
+tags:
+  - name: OpenNGC

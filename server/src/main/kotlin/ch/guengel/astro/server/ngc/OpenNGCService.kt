@@ -10,7 +10,6 @@ import ch.guengel.astro.server.model.Constellation
 import ch.guengel.astro.server.model.NGCEntry
 import ch.guengel.astro.server.model.NGCEntryWithHorizontalCoordinates
 import ch.guengel.astro.server.model.ObjectType
-import io.quarkus.scheduler.Scheduled
 import org.jboss.logging.Logger
 import java.time.OffsetDateTime
 import java.util.concurrent.atomic.AtomicReference
@@ -31,11 +30,15 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
     @PostConstruct
     fun postConstruct() {
         try {
-            val catalog = catalogProvider.loadCatalog()
-            catalogReference.set(catalog)
+            loadCatalog()
         } catch (e: Exception) {
             log.error("Error while loading catalog", e)
         }
+    }
+
+    fun loadCatalog() {
+        val catalog = catalogProvider.loadCatalog()
+        catalogReference.set(catalog)
     }
 
     data class ListArguments(
@@ -133,7 +136,6 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
             catalogEntryMapper::map)
     }
 
-
     private fun <T> emptyPagedList(arguments: ListArguments): PagedList<T> =
         PagedList(
             entryList = emptyList(),
@@ -211,17 +213,6 @@ class OpenNGCService(private val catalogProvider: CatalogProvider, private val c
         .getLastUpdated()
         ?.let { CatalogLastUpdate().lastUpdated(it) }
         ?: throw CatalogNotLoadedError("Catalog not loaded yet")
-
-    @Scheduled(cron = "{astro-server.catalog-fetch.cron.expression}")
-    fun fetchCatalog() {
-        log.info("Reload catalog")
-        try {
-            val catalog = catalogProvider.fetchCatalog()
-            catalogReference.set(catalog)
-        } catch (e: Exception) {
-            log.error("Error while fetching catalog", e)
-        }
-    }
 
     private companion object {
         private val log: Logger = Logger.getLogger(OpenNGCService::class.java)

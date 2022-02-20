@@ -2,16 +2,30 @@ quarkus:
   http:
     access-log:
       enabled: true
+  # Must be specified as ENV vars
+  #  oidc-client:
+  #    auth-server-url: https://sso.guengel.ch/auth/realms/astro
+  #    client-id: astro-server-catalog-fetcher-service
   oidc:
     auth-server-url: https://sso.guengel.ch/auth/realms/astro
-    client-id: astro-server-service
     enabled: true
     discovery-enabled: true
+  kubernetes-client:
+    namespace: astro
 
 astro-server:
   catalog-file-path: /tmp/astro-server/NGC.csv
-  catalog-fetch:
+  catalog-fetcher:
     catalog-url: https://raw.githubusercontent.com/mattiaverga/OpenNGC/master/NGC.csv
+    notification:
+      # Path on astro server instance
+      path: /v1/open-ngc/catalog/reload
+      scheme: http
+      timeout: PT5S
+      pod-prefix: astro-server
+      pod-port: 8080
+    cron:
+      expression: "0 0 5 * * ?"
 
 "%dev":
   quarkus:
@@ -20,3 +34,4 @@ astro-server:
         ~: true
         origins: http://localhost:4200
         exposed-headers: x-first-page,x-last-page,x-next-page-index,x-page-index,x-page-size,x-total-pages,x-total-entries
+      port: 8081
