@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'amd64&&docker&&kotlin'
+        label 'amd64&&docker&&kotlin&&graalvm'
     }
 
     options {
@@ -137,7 +137,7 @@ pipeline {
             parallel {
                 stage("ARM64") {
                     agent {
-                        label "arm64&&docker&&kotlin"
+                        label "arm64&&docker&&kotlin&&graalvm"
                     }
 
                     steps {
@@ -182,7 +182,7 @@ pipeline {
             parallel {
                 stage("ARM64") {
                     agent {
-                        label "arm64&&docker&&kotlin"
+                        label "arm64&&docker&&kotlin&&graalvm"
                     }
 
                     environment {
@@ -256,16 +256,18 @@ pipeline {
 }
 
 def buildDockerImage(String fromDirectory, String tag) {
-    withEnv(['IMAGE_TAG=' + tag]) {
+    withEnv(['IMAGE_TAG=' + tag, 'GRAALVM_HOME=/opt/graalvm', 'JAVA_HOME=/opt/graalvm']) {
         withCredentials([usernamePassword(credentialsId: '750504ce-6f4f-4252-9b2b-5814bd561430', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
             sh 'docker login --username "$USERNAME" --password "$PASSWORD"'
             configFileProvider([configFile(fileId: '4f3d0128-0fdd-4de7-8536-5cbdd54a8baf', variable: 'MAVEN_SETTINGS_XML')]) {
                 dir(fromDirectory) {
-                    sh '''mvn -B \
+                    sh '''mvn -B \\
                         -s "${MAVEN_SETTINGS_XML}" \\
                         clean \\
                         package \\
                         -DskipTests \\
+                        -Dnative \\
+                        -Dquarkus.docker.dockerfile-native-path=src/main/docker/Dockerfile.native-ubi \\
                         -Dquarkus.container-image.build=true \\
                         -Dquarkus.container-image.tag="${IMAGE_TAG}" \\
                         -Dquarkus.container-image.group=rafaelostertag \\
