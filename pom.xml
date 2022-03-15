@@ -136,7 +136,6 @@
                                     <returnResponse>true</returnResponse>
                                     <apiPackage>${api.package}</apiPackage>
                                     <modelPackage>${model.package}</modelPackage>
-                                    <additionalEnumTypeAnnotations>true</additionalEnumTypeAnnotations>
                                 </configOptions>
                             </configuration>
                         </execution>
