@@ -53,7 +53,7 @@
 
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>2.7.1.Final</quarkus.platform.version>
+        <quarkus.platform.version>2.7.5.Final</quarkus.platform.version>
 
         <assertk-jvm.version>0.25</assertk-jvm.version>
         <astrolib.version>6.0.0</astrolib.version>
