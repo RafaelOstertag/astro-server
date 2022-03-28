@@ -6,7 +6,7 @@
     <groupId>ch.guengel.astro.server</groupId>
     <artifactId>astro-server-parent</artifactId>
     <packaging>pom</packaging>
-    <version>2.0.2</version>
+    <version>2.0.3-SNAPSHOT</version>
 
     <name>Astro Server Parent</name>
 
@@ -53,7 +53,7 @@
 
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>2.7.1.Final</quarkus.platform.version>
+        <quarkus.platform.version>2.7.5.Final</quarkus.platform.version>
 
         <assertk-jvm.version>0.25</assertk-jvm.version>
         <astrolib.version>6.0.0</astrolib.version>
@@ -136,7 +136,6 @@
                                     <returnResponse>true</returnResponse>
                                     <apiPackage>${api.package}</apiPackage>
                                     <modelPackage>${model.package}</modelPackage>
-                                    <additionalEnumTypeAnnotations>true</additionalEnumTypeAnnotations>
                                 </configOptions>
                             </configuration>
                         </execution>
