@@ -40,7 +40,7 @@ private const val latitude = 47.0
 
 @QuarkusTest
 internal class OpenNGCServiceIT {
-    private val numberOfCatalogEntries = 100
+    private val numberOfCatalogEntries = 30
     private var easyRandom = EasyRandom(easyRandomParameters)
 
     private lateinit var catalogEntries: List<NgcEntry>
@@ -116,13 +116,13 @@ internal class OpenNGCServiceIT {
 
     @Test
     fun `list pages correctly last page`() {
-        val result = openNGCService.list(OpenNGCService.ListArguments(4, 24))
-        assertThat(result.entryList).hasSize(4)
+        val result = openNGCService.list(OpenNGCService.ListArguments(4, 7))
+        assertThat(result.entryList).hasSize(2)
         assertThat(result.firstPage).isFalse()
         assertThat(result.lastPage).isTrue()
-        assertThat(result.numberOfPages).isEqualTo(ceil(numberOfCatalogEntries / 24.0).toInt())
+        assertThat(result.numberOfPages).isEqualTo(ceil(numberOfCatalogEntries / 7.0).toInt())
         assertThat(result.pageIndex).isEqualTo(4)
-        assertThat(result.pageSize).isEqualTo(24)
+        assertThat(result.pageSize).isEqualTo(7)
         assertThat(result.nextPageIndex).isNull()
         assertThat(result.previousPageIndex).isNotNull().isEqualTo(3)
     }
@@ -270,16 +270,16 @@ internal class OpenNGCServiceIT {
     @Test
     fun `list extended pages correctly last page`() {
         val result = OpenNGCService.ListExtendedArguments(
-            OpenNGCService.ListArguments(4, 24),
+            OpenNGCService.ListArguments(4, 7),
             longitude, latitude, OffsetDateTime.now()
         )
             .let { openNGCService.listExtended(it) }
-        assertThat(result.entryList).hasSize(4)
+        assertThat(result.entryList).hasSize(2)
         assertThat(result.firstPage).isFalse()
         assertThat(result.lastPage).isTrue()
-        assertThat(result.numberOfPages).isEqualTo(ceil(numberOfCatalogEntries / 24.0).toInt())
+        assertThat(result.numberOfPages).isEqualTo(ceil(numberOfCatalogEntries / 7.0).toInt())
         assertThat(result.pageIndex).isEqualTo(4)
-        assertThat(result.pageSize).isEqualTo(24)
+        assertThat(result.pageSize).isEqualTo(7)
         assertThat(result.nextPageIndex).isNull()
         assertThat(result.previousPageIndex).isNotNull().isEqualTo(3)
     }
