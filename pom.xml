@@ -65,13 +65,13 @@
         <wiremock.version>2.32.0</wiremock.version>
 
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
-        <dependency-check-maven.version>6.5.1</dependency-check-maven.version>
+        <dependency-check-maven.version>7.0.4</dependency-check-maven.version>
         <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
         <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
         <jandex-maven-plugin.version>1.1.0</jandex-maven-plugin.version>
         <maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
         <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
-        <openapi-generator-maven-plugin.version>5.3.1</openapi-generator-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>5.4.0</openapi-generator-maven-plugin.version>
         <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
 
         <!-- Sonar -->
