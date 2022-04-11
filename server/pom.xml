@@ -246,34 +246,5 @@
                 <quarkus.package.type>native</quarkus.package.type>
             </properties>
         </profile>
-        <profile>
-            <id>security-scan</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.owasp</groupId>
-                        <artifactId>dependency-check-maven</artifactId>
-                        <version>${dependency-check-maven.version}</version>
-                        <configuration>
-                            <formats>
-                                <format>HTML</format>
-                                <format>XML</format>
-                            </formats>
-                            <suppressionFiles>
-                                <suppressionFile>dependency-check-suppression.xml</suppressionFile>
-                            </suppressionFiles>
-                            <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
     </profiles>
 </project>
