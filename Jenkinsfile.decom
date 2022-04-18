@@ -73,6 +73,12 @@ pipeline {
                     }
                     dependencyCheckPublisher failedTotalCritical: 1, failedTotalHigh: 4, failedTotalLow: 8, failedTotalMedium: 8, pattern: 'target/dependency-check-report.xml', unstableTotalCritical: 0, unstableTotalHigh: 2, unstableTotalLow: 8, unstableTotalMedium: 8
                 }
+                dir('catalog-fetcher') {
+                    configFileProvider([configFile(fileId: '4f3d0128-0fdd-4de7-8536-5cbdd54a8baf', variable: 'MAVEN_SETTINGS_XML')]) {
+                        sh 'mvn -B -s "$MAVEN_SETTINGS_XML" -Psecurity-scan dependency-check:check'
+                    }
+                    dependencyCheckPublisher failedTotalCritical: 1, failedTotalHigh: 4, failedTotalLow: 8, failedTotalMedium: 8, pattern: 'target/dependency-check-report.xml', unstableTotalCritical: 0, unstableTotalHigh: 2, unstableTotalLow: 8, unstableTotalMedium: 8
+                }
             }
         }
 
