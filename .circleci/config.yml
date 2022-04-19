@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  c: rafaelostertag/common-orb@1.6.1
+  c: rafaelostertag/common-orb@1.6.2
 
 jobs:
   build-docker-image:
