@@ -1,54 +1,7 @@
 version: 2.1
 
 orbs:
-  c: rafaelostertag/common-orb@1.6.2
-
-jobs:
-  build-docker-image:
-    parameters:
-      dir:
-        type: string
-      remote_docker:
-        type: boolean
-        default: true
-      executor:
-        type: executor
-    executor: <<parameters.executor>>
-    steps:
-      - c/quarkus-native-docker-image:
-          dir: <<parameters.dir>>
-          remote_docker: <<parameters.remote_docker>>
-
-  build-multi-arch-manifest:
-    parameters:
-      remote_docker:
-        type: boolean
-        default: true
-      image:
-        type: string
-    executor: c/java11-build-amd64
-    steps:
-      - c/docker-multi-arch-manifest:
-          image: <<parameters.image>>
-          remote_docker: <<parameters.remote_docker>>
-
-  trigger-angular-api-build:
-    docker:
-      - image: cimg/openjdk:11.0
-    resource_class: small
-    steps:
-      - checkout
-      - run:
-          name: Trigger angular api build
-          command: .circleci/trigger-angular-api-build.sh
-
-  trigger-helm-deployment:
-    executor: c/java11-build-amd64
-    steps:
-      - checkout
-      - run:
-          name: Trigger helm deployment
-          command: .circleci/trigger-helm-deployment.sh
+  c: rafaelostertag/common-orb@1.10.3
 
 workflows:
   build-any-branch:
@@ -65,12 +18,15 @@ workflows:
             - build-and-test
           context:
             - maven-repository-write
-      - trigger-angular-api-build:
+      - c/maven-trigger-pipeline-with-version:
+          name: trigger-astro-server-angular
+          project-name: astro-server-angular
+          allow-snapshot: true
           context:
             - circle-ci
           requires:
             - deploy-maven-artifact
-      - build-docker-image:
+      - c/maven-quarkus-native-docker-image:
           name: astro-server-docker-image-amd64
           executor: c/graalvm-native-amd64
           dir: "server"
@@ -79,7 +35,7 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
-      - build-docker-image:
+      - c/maven-quarkus-native-docker-image:
           name: catalog-fetcher-docker-image-amd64
           executor: c/graalvm-native-amd64
           dir: "catalog-fetcher"
@@ -88,7 +44,7 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
-      - build-docker-image:
+      - c/maven-quarkus-native-docker-image:
           name: catalog-fetcher-docker-image-arm64
           executor: c/graalvm-native-arm64
           dir: "catalog-fetcher"
@@ -98,7 +54,7 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
-      - build-docker-image:
+      - c/maven-quarkus-native-docker-image:
           name: astro-server-docker-image-arm64
           executor: c/graalvm-native-arm64
           dir: "server"
@@ -108,7 +64,7 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
-      - build-multi-arch-manifest:
+      - c/maven-multi-arch-manifest:
           name: build-multi-arch-server-manifest
           image: "rafaelostertag/astro-server"
           context:
@@ -116,7 +72,7 @@ workflows:
           requires:
             - astro-server-docker-image-amd64
             - astro-server-docker-image-arm64
-      - build-multi-arch-manifest:
+      - c/maven-multi-arch-manifest:
           name: build-multi-arch-catalog-fetcher-manifest
           image: "rafaelostertag/astro-server-catalog-fetcher"
           context:
@@ -124,7 +80,8 @@ workflows:
           requires:
             - catalog-fetcher-docker-image-amd64
             - catalog-fetcher-docker-image-arm64
-      - trigger-helm-deployment:
+      - c/maven-trigger-pipeline-with-version:
+          project-name: astro-server-helm
           filters:
             branches:
               only: master
