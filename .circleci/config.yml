@@ -1,24 +1,9 @@
 version: 2.1
 
 orbs:
-  c: rafaelostertag/common-orb@1.8.1
+  c: rafaelostertag/common-orb@1.9.0
 
 jobs:
-  build-docker-image:
-    parameters:
-      dir:
-        type: string
-      remote_docker:
-        type: boolean
-        default: true
-      executor:
-        type: executor
-    executor: <<parameters.executor>>
-    steps:
-      - c/quarkus-native-docker-image:
-          dir: <<parameters.dir>>
-          remote_docker: <<parameters.remote_docker>>
-
   build-multi-arch-manifest:
     parameters:
       remote_docker:
@@ -70,7 +55,7 @@ workflows:
             - circle-ci
           requires:
             - deploy-maven-artifact
-      - build-docker-image:
+      - c/maven-quarkus-native-docker-image:
           name: astro-server-docker-image-amd64
           executor: c/graalvm-native-amd64
           dir: "server"
@@ -79,7 +64,7 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
-      - build-docker-image:
+      - c/maven-quarkus-native-docker-image:
           name: catalog-fetcher-docker-image-amd64
           executor: c/graalvm-native-amd64
           dir: "catalog-fetcher"
@@ -88,7 +73,7 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
-      - build-docker-image:
+      - c/maven-quarkus-native-docker-image:
           name: catalog-fetcher-docker-image-arm64
           executor: c/graalvm-native-arm64
           dir: "catalog-fetcher"
@@ -98,7 +83,7 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
-      - build-docker-image:
+      - c/maven-quarkus-native-docker-image:
           name: astro-server-docker-image-arm64
           executor: c/graalvm-native-arm64
           dir: "server"
@@ -108,7 +93,7 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
-      - build-multi-arch-manifest:
+      - c/maven-multi-arch-manifest:
           name: build-multi-arch-server-manifest
           image: "rafaelostertag/astro-server"
           context:
