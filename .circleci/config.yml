@@ -81,6 +81,7 @@ workflows:
             - catalog-fetcher-docker-image-amd64
             - catalog-fetcher-docker-image-arm64
       - c/maven-trigger-pipeline-with-version:
+          name: trigger-helm-deployment
           project-name: astro-server-helm
           filters:
             branches:
