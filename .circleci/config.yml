@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  c: rafaelostertag/common-orb@1.10.4
+  c: rafaelostertag/common-orb@1.10.5
 
 workflows:
   build-any-branch:
@@ -12,6 +12,7 @@ workflows:
           context:
             - sonar
             - repository-read
+      # Artifacts should always be deployed. Used to build server JS API, also for dev versions
       - c/maven-deploy-artifacts:
           name: deploy-maven-artifact
           requires:
