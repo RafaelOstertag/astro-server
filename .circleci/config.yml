@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  c: rafaelostertag/common-orb@1.10.3
+  c: rafaelostertag/common-orb@1.19.0
 
 workflows:
   build-any-branch:
@@ -12,6 +12,7 @@ workflows:
           context:
             - sonar
             - repository-read
+      # Artifacts should always be deployed. Used to build server JS API, also for dev versions
       - c/maven-deploy-artifacts:
           name: deploy-maven-artifact
           requires:
@@ -81,6 +82,7 @@ workflows:
             - catalog-fetcher-docker-image-amd64
             - catalog-fetcher-docker-image-arm64
       - c/maven-trigger-pipeline-with-version:
+          name: trigger-helm-deployment
           project-name: astro-server-helm
           filters:
             branches:
