@@ -202,4 +202,11 @@
         <packageUrl regex="true">^pkg:maven/io\.quarkus/quarkus\-container\-image\-docker@.*$</packageUrl>
         <cve>CVE-2022-25365</cve>
     </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: okhttp-3.14.9.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.squareup\.okhttp3/okhttp@.*$</packageUrl>
+        <vulnerabilityName>CVE-2021-0341</vulnerabilityName>
+    </suppress>
 </suppressions>
