@@ -29,7 +29,7 @@ internal class CatalogFileServiceTest {
 
     @Test
     fun `should get correct file`() {
-        assertThat(catalogFileService.catalogFile).isEqualTo(testFile)
+        assertThat(catalogFileService.catalogFile.canonicalFile).isEqualTo(testFile.canonicalFile)
     }
 
     @Test
