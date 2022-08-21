@@ -36,7 +36,7 @@
     </repositories>
 
     <properties>
-        <kotlin.version>1.6.10</kotlin.version>
+        <kotlin.version>1.7.10</kotlin.version>
         <maven.compiler.release>11</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -45,7 +45,7 @@
 
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>2.9.2.Final</quarkus.platform.version>
+        <quarkus.platform.version>2.11.2.Final</quarkus.platform.version>
 
         <assertk-jvm.version>0.25</assertk-jvm.version>
         <astrolib.version>6.0.1</astrolib.version>
@@ -56,15 +56,15 @@
         <validation-api.version>2.0.1.Final</validation-api.version>
         <wiremock.version>2.32.0</wiremock.version>
 
-        <compiler-plugin.version>3.8.1</compiler-plugin.version>
-        <dependency-check-maven.version>7.1.0</dependency-check-maven.version>
+        <compiler-plugin.version>3.10.1</compiler-plugin.version>
+        <dependency-check-maven.version>7.1.2</dependency-check-maven.version>
         <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
         <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
         <jandex-maven-plugin.version>1.1.0</jandex-maven-plugin.version>
-        <maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
-        <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
-        <openapi-generator-maven-plugin.version>5.4.0</openapi-generator-maven-plugin.version>
-        <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.0.0-M7</maven-failsafe-plugin.version>
+        <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
+        <openapi-generator-maven-plugin.version>6.0.1</openapi-generator-maven-plugin.version>
+        <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
 
         <!-- Sonar -->
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
