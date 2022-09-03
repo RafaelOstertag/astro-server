@@ -1,10 +1,25 @@
 version: 2.1
 
+version-tag-only: &version-tag-only
+  tags:
+    only: /^v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/
+  branches:
+    ignore: /.*/
+
+schedule-trigger: &schedule-trigger
+  equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
+
+not-schedule-trigger: &not-schedule-trigger
+  not:
+    *schedule-trigger
+
 orbs:
   c: rafaelostertag/common-orb@1.19.0
 
 workflows:
   build-any-branch:
+    when:
+      *not-schedule-trigger
     jobs:
       - c/maven-build-and-test:
           name: build-and-test
@@ -27,6 +42,38 @@ workflows:
             - circle-ci
           requires:
             - deploy-maven-artifact
+
+  build-and-release:
+    when:
+      *not-schedule-trigger
+    jobs:
+      - c/maven-build-and-test:
+          name: build-and-test
+          sonar-project-key: "ch.guengel.astro.server:astro-server-parent"
+          context:
+            - sonar
+            - repository-read
+          filters:
+            *version-tag-only
+      # Artifacts should always be deployed. Used to build server JS API, also for dev versions
+      - c/maven-deploy-artifacts:
+          name: deploy-maven-artifact
+          requires:
+            - build-and-test
+          context:
+            - maven-repository-write
+          filters:
+            *version-tag-only
+      - c/maven-trigger-pipeline-with-version:
+          name: trigger-astro-server-angular
+          project-name: astro-server-angular
+          allow-snapshot: true
+          context:
+            - circle-ci
+          requires:
+            - deploy-maven-artifact
+          filters:
+            *version-tag-only
       - c/maven-quarkus-native-docker-image:
           name: astro-server-docker-image-amd64
           executor: c/graalvm-native-amd64
@@ -36,6 +83,8 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
+          filters:
+            *version-tag-only
       - c/maven-quarkus-native-docker-image:
           name: catalog-fetcher-docker-image-amd64
           executor: c/graalvm-native-amd64
@@ -45,6 +94,8 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
+          filters:
+            *version-tag-only
       - c/maven-quarkus-native-docker-image:
           name: catalog-fetcher-docker-image-arm64
           executor: c/graalvm-native-arm64
@@ -55,6 +106,8 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
+          filters:
+            *version-tag-only
       - c/maven-quarkus-native-docker-image:
           name: astro-server-docker-image-arm64
           executor: c/graalvm-native-arm64
@@ -65,6 +118,8 @@ workflows:
             - docker-build
           requires:
             - deploy-maven-artifact
+          filters:
+            *version-tag-only
       - c/maven-multi-arch-manifest:
           name: build-multi-arch-server-manifest
           image: "rafaelostertag/astro-server"
@@ -73,6 +128,8 @@ workflows:
           requires:
             - astro-server-docker-image-amd64
             - astro-server-docker-image-arm64
+          filters:
+            *version-tag-only
       - c/maven-multi-arch-manifest:
           name: build-multi-arch-catalog-fetcher-manifest
           image: "rafaelostertag/astro-server-catalog-fetcher"
@@ -81,27 +138,22 @@ workflows:
           requires:
             - catalog-fetcher-docker-image-amd64
             - catalog-fetcher-docker-image-arm64
+          filters:
+            *version-tag-only
       - c/maven-trigger-pipeline-with-version:
           name: trigger-helm-deployment
           project-name: astro-server-helm
-          filters:
-            branches:
-              only: master
           context:
             - circle-ci
           requires:
             - build-multi-arch-catalog-fetcher-manifest
             - build-multi-arch-server-manifest
-
-  daily-dependency-check:
-    triggers:
-      - schedule:
-          cron: "21 4 * * 4"
           filters:
-            branches:
-              only:
-                - master
-                - develop
+            *version-tag-only
+
+  dependency-check:
+    when:
+      *schedule-trigger
     jobs:
       - c/maven-dependency-check:
           context:
