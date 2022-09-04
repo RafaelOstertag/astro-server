@@ -1,5 +1,11 @@
 version: 2.1
 
+parameters:
+  deploy-dev-artifact:
+    description: Deploy artifacts and trigger JS API build
+    type: boolean
+    default: false
+
 version-tag-only: &version-tag-only
   tags:
     only: /^v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/
@@ -10,8 +16,10 @@ schedule-trigger: &schedule-trigger
   equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
 
 not-schedule-trigger: &not-schedule-trigger
-  not:
-    *schedule-trigger
+  and:
+    - equal: [ false, << pipeline.parameters.deploy-dev-artifact >> ]
+    - not:
+        *schedule-trigger
 
 orbs:
   c: rafaelostertag/common-orb@1.19.0
@@ -20,6 +28,16 @@ workflows:
   build-any-branch:
     when:
       *not-schedule-trigger
+    jobs:
+      - c/maven-build-and-test:
+          name: build-and-test
+          sonar-project-key: "ch.guengel.astro.server:astro-server-parent"
+          context:
+            - sonar
+            - repository-read
+
+  build-and-deploy-artifacts:
+    when: << pipeline.parameters.deploy-dev-artifact >>
     jobs:
       - c/maven-build-and-test:
           name: build-and-test
